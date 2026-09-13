@@ -50,11 +50,32 @@ export default function AdminMentorsPage() {
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
+      let apiMentors: User[] = [];
+      let apiTeams: Team[] = [];
+
       if (res.ok) {
         const data = await res.json();
-        setMentors(data.mentors || []);
-        setTeams(data.teams || []);
+        apiMentors = data.mentors || [];
+        apiTeams = data.teams || [];
+      } else {
+        apiMentors = db.getMentors();
+        apiTeams = db.getTeams();
       }
+
+      try {
+        const firestoreMentors = await fetchUsersFromFirestore('mentor');
+        if (firestoreMentors && firestoreMentors.length > 0) {
+          const map = new Map<string, User>();
+          apiMentors.forEach((m) => map.set(m.id, m));
+          firestoreMentors.forEach((m) => map.set(m.id, { ...map.get(m.id), ...m }));
+          apiMentors = Array.from(map.values());
+        }
+      } catch {
+        // Fallback gracefully
+      }
+
+      setMentors(apiMentors);
+      setTeams(apiTeams);
     } catch {
       setMentors(db.getMentors());
       setTeams(db.getTeams());

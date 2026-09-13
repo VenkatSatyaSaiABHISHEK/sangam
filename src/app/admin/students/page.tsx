@@ -73,12 +73,36 @@ export default function AdminStudentsPage() {
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
+      let apiStudents: User[] = [];
+      let apiTeams: Team[] = [];
+      let apiBuses: Bus[] = [];
+
       if (res.ok) {
         const data = await res.json();
-        setStudents(data.students || []);
-        setTeams(data.teams || []);
-        setBuses(data.buses || []);
+        apiStudents = data.students || [];
+        apiTeams = data.teams || [];
+        apiBuses = data.buses || [];
+      } else {
+        apiStudents = db.getStudents();
+        apiTeams = db.getTeams();
+        apiBuses = db.getBuses();
       }
+
+      try {
+        const firestoreStudents = await fetchUsersFromFirestore('student');
+        if (firestoreStudents && firestoreStudents.length > 0) {
+          const map = new Map<string, User>();
+          apiStudents.forEach((s) => map.set(s.id, s));
+          firestoreStudents.forEach((s) => map.set(s.id, { ...map.get(s.id), ...s }));
+          apiStudents = Array.from(map.values());
+        }
+      } catch {
+        // Fallback gracefully
+      }
+
+      setStudents(apiStudents);
+      setTeams(apiTeams);
+      setBuses(apiBuses);
     } catch {
       setStudents(db.getStudents());
       setTeams(db.getTeams());

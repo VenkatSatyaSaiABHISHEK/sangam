@@ -55,6 +55,7 @@ import {
   INITIAL_ANNOUNCEMENTS,
   INITIAL_PHOTOS,
 } from './seed-data';
+import summitSeedData from '../../data/summit.json';
 
 interface DatabaseSchema {
   event: EventInfo;
@@ -78,17 +79,26 @@ class PersistentDatabase {
   }
 
   private getDefaultAdmin(): User {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@summitconnect.org';
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@summitconnect.org').trim().toLowerCase();
     return {
       id: 'admin-root',
       eventId: 'summit-2027',
       role: 'admin',
-      fullName: 'Administrator',
+      fullName: 'Master Administrator',
       email: adminEmail,
-      phone: '+1 000 000 0000',
+      phone: '+91 000 000 0000',
       status: 'active',
       createdAt: new Date().toISOString(),
     };
+  }
+
+  private syncAdminEmail(schema: DatabaseSchema): void {
+    const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    if (!adminEmail) return;
+    const adminUser = schema.users.find((u) => u.role === 'admin' || u.id === 'admin-root');
+    if (adminUser) {
+      adminUser.email = adminEmail;
+    }
   }
 
   private loadFromFile(): DatabaseSchema {
@@ -98,10 +108,20 @@ class PersistentDatabase {
       if (nodeFs && typeof nodeFs.existsSync === 'function' && dataFile && nodeFs.existsSync(dataFile)) {
         const raw = nodeFs.readFileSync(dataFile, 'utf-8');
         const parsed = JSON.parse(raw);
-        return parsed;
+        if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
+          this.syncAdminEmail(parsed);
+          return parsed;
+        }
       }
     } catch (err) {
       console.error('Error reading summit.json, initializing fresh database:', err);
+    }
+
+    // Cloud / Vercel Serverless Fallback: Use bundled summit.json
+    if (summitSeedData && Array.isArray((summitSeedData as any).users)) {
+      const cloned = JSON.parse(JSON.stringify(summitSeedData)) as DatabaseSchema;
+      this.syncAdminEmail(cloned);
+      return cloned;
     }
 
     // Clean initial state (Zero fake records)
@@ -171,10 +191,20 @@ class PersistentDatabase {
     if (nodeFs && typeof nodeFs.existsSync === 'function' && dataFile && nodeFs.existsSync(dataFile)) {
       try {
         const raw = nodeFs.readFileSync(dataFile, 'utf-8');
-        this.data = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
+          this.syncAdminEmail(parsed);
+          this.data = parsed;
+          return;
+        }
       } catch (err) {
         // read contention fallback
       }
+    }
+    if ((!this.data || !this.data.users || this.data.users.length <= 1) && summitSeedData && Array.isArray((summitSeedData as any).users)) {
+      const cloned = JSON.parse(JSON.stringify(summitSeedData)) as DatabaseSchema;
+      this.syncAdminEmail(cloned);
+      this.data = cloned;
     }
   }
 

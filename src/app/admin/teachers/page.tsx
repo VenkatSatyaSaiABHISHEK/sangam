@@ -31,10 +31,28 @@ export default function AdminTeachersPage() {
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
+      let apiTeachers: User[] = [];
+
       if (res.ok) {
         const data = await res.json();
-        setTeachers(data.teachers || []);
+        apiTeachers = data.teachers || [];
+      } else {
+        apiTeachers = db.getTeachers();
       }
+
+      try {
+        const firestoreTeachers = await fetchUsersFromFirestore('teacher');
+        if (firestoreTeachers && firestoreTeachers.length > 0) {
+          const map = new Map<string, User>();
+          apiTeachers.forEach((t) => map.set(t.id, t));
+          firestoreTeachers.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
+          apiTeachers = Array.from(map.values());
+        }
+      } catch {
+        // Fallback gracefully
+      }
+
+      setTeachers(apiTeachers);
     } catch {
       setTeachers(db.getTeachers());
     }
