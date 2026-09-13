@@ -3,8 +3,10 @@ import { db } from '@/lib/db';
 import {
   saveTeamToFirestore,
   deleteTeamFromFirestore,
+  fetchTeamsFromFirestore,
   saveUserToFirestore,
   deleteUserFromFirestore,
+  fetchUsersFromFirestore,
   saveBusToFirestore,
   deleteBusFromFirestore,
   saveAnnouncementToFirestore,
@@ -23,28 +25,69 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const includeParam = url.searchParams.get('include');
 
+    let allTeams = db.getTeams();
+    let allStudents = db.getStudents();
+    let allMentors = db.getMentors();
+    let allTeachers = db.getTeachers();
     let allRooms = db.getRooms();
+
     try {
-      const fsRooms = await fetchRoomsFromFirestore();
-      if (fsRooms && fsRooms.length > 0) {
+      const [fsTeams, fsUsers, fsRooms] = await Promise.all([
+        fetchTeamsFromFirestore(),
+        fetchUsersFromFirestore(),
+        fetchRoomsFromFirestore(),
+      ]);
+
+      if (fsTeams && fsTeams.length > 0) {
         const map = new Map<string, any>();
-        allRooms.forEach((r) => map.set(r.id, r));
-        fsRooms.forEach((r) => map.set(r.id, { ...map.get(r.id), ...r }));
-        allRooms = Array.from(map.values());
+        allTeams.forEach((t) => map.set(t.id, t));
+        fsTeams.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
+        allTeams = Array.from(map.values());
       }
-    } catch {}
+
+      if (fsUsers && fsUsers.length > 0) {
+        const sMap = new Map<string, any>();
+        allStudents.forEach((s) => sMap.set(s.id, s));
+        const mMap = new Map<string, any>();
+        allMentors.forEach((m) => mMap.set(m.id, m));
+        const tMap = new Map<string, any>();
+        allTeachers.forEach((t) => tMap.set(t.id, t));
+
+        fsUsers.forEach((u) => {
+          if (u.role === 'student') sMap.set(u.id, { ...sMap.get(u.id), ...u });
+          else if (u.role === 'mentor') mMap.set(u.id, { ...mMap.get(u.id), ...u });
+          else if (u.role === 'teacher') tMap.set(u.id, { ...tMap.get(u.id), ...u });
+        });
+
+        allStudents = Array.from(sMap.values());
+        allMentors = Array.from(mMap.values());
+        allTeachers = Array.from(tMap.values());
+      }
+
+      if (fsRooms && fsRooms.length > 0) {
+        const rMap = new Map<string, any>();
+        allRooms.forEach((r) => rMap.set(r.id, r));
+        fsRooms.forEach((r) => rMap.set(r.id, { ...rMap.get(r.id), ...r }));
+        allRooms = Array.from(rMap.values());
+      }
+    } catch (e) {
+      console.warn('Firestore cloud sync in GET /api/data:', e);
+    }
+
+    const supportMentors = allMentors.filter((m) => m.mentorType === 'support' || !m.teamId);
+    const cohortMentors = allMentors.filter((m) => m.mentorType === 'cohort' && m.teamId);
 
     if (includeParam) {
       const fields = new Set(includeParam.split(',').map((f) => f.trim().toLowerCase()));
       const partialData: Record<string, any> = {};
 
       if (fields.has('event')) partialData.event = db.getEvent();
-      if (fields.has('students')) partialData.students = db.getStudents();
-      if (fields.has('mentors')) partialData.mentors = db.getMentors();
-      if (fields.has('supportmentors')) partialData.supportMentors = db.getSupportMentors();
-      if (fields.has('cohortmentors')) partialData.cohortMentors = db.getCohortMentors();
-      if (fields.has('teachers')) partialData.teachers = db.getTeachers();
-      if (fields.has('teams')) partialData.teams = db.getTeams();
+      if (fields.has('students')) partialData.students = allStudents;
+      if (fields.has('mentors')) partialData.mentors = allMentors;
+      if (fields.has('supportmentors')) partialData.supportMentors = supportMentors;
+      if (fields.has('cohortmentors')) partialData.cohortMentors = cohortMentors;
+      if (fields.has('teachers')) partialData.teachers = allTeachers;
+      if (fields.has('teams')) partialData.teams = allTeams;
       if (fields.has('buses')) partialData.buses = db.getBuses();
       if (fields.has('announcements')) partialData.announcements = db.getAnnouncements();
       if (fields.has('rooms')) partialData.rooms = allRooms;
@@ -60,12 +103,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         event: db.getEvent(),
-        students: db.getStudents(),
-        mentors: db.getMentors(),
-        supportMentors: db.getSupportMentors(),
-        cohortMentors: db.getCohortMentors(),
-        teachers: db.getTeachers(),
-        teams: db.getTeams(),
+        students: allStudents,
+        mentors: allMentors,
+        supportMentors: supportMentors,
+        cohortMentors: cohortMentors,
+        teachers: allTeachers,
+        teams: allTeams,
         buses: db.getBuses(),
         announcements: db.getAnnouncements(),
         rooms: allRooms,

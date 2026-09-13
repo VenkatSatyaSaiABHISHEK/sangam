@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { db } from '@/lib/db';
 import { Team, User, Bus, AttendanceRecord } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,15 +121,73 @@ export default function AdminTeamsPage() {
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
+      let apiTeams: Team[] = [];
+      let apiStudents: User[] = [];
+      let apiMentors: User[] = [];
+      let apiBuses: Bus[] = [];
+      let apiAttendance: AttendanceRecord[] = [];
+
       if (res && res.ok) {
         const data = await res.json();
-        setCachedData(data);
-        if (data.teams) setTeams(sortTeams(data.teams));
-        if (data.students) setStudents(data.students || []);
-        if (data.mentors) setMentors(data.mentors || []);
-        if (data.buses) setBuses(data.buses || []);
-        if (data.attendance) setAttendance(data.attendance || []);
+        apiTeams = data.teams || [];
+        apiStudents = data.students || [];
+        apiMentors = data.mentors || [];
+        apiBuses = data.buses || [];
+        apiAttendance = data.attendance || [];
+      } else {
+        apiTeams = db.getTeams();
+        apiStudents = db.getStudents();
+        apiMentors = db.getMentors();
+        apiBuses = db.getBuses();
+        apiAttendance = db.getAttendance();
       }
+
+      try {
+        const { fetchTeamsFromFirestore, fetchUsersFromFirestore } = await import('@/lib/firebase-db');
+        const [fsTeams, fsMentors, fsStudents] = await Promise.all([
+          fetchTeamsFromFirestore(),
+          fetchUsersFromFirestore('mentor'),
+          fetchUsersFromFirestore('student'),
+        ]);
+
+        if (fsTeams && fsTeams.length > 0) {
+          const map = new Map<string, Team>();
+          apiTeams.forEach((t) => map.set(t.id, t));
+          fsTeams.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
+          apiTeams = Array.from(map.values());
+        }
+
+        if (fsMentors && fsMentors.length > 0) {
+          const map = new Map<string, User>();
+          apiMentors.forEach((m) => map.set(m.id, m));
+          fsMentors.forEach((m) => map.set(m.id, { ...map.get(m.id), ...m }));
+          apiMentors = Array.from(map.values());
+        }
+
+        if (fsStudents && fsStudents.length > 0) {
+          const map = new Map<string, User>();
+          apiStudents.forEach((s) => map.set(s.id, s));
+          fsStudents.forEach((s) => map.set(s.id, { ...map.get(s.id), ...s }));
+          apiStudents = Array.from(map.values());
+        }
+      } catch (err) {
+        console.warn('Firestore fallback sync in AdminTeamsPage:', err);
+      }
+
+      const sorted = sortTeams(apiTeams);
+      setTeams(sorted);
+      setStudents(apiStudents);
+      setMentors(apiMentors);
+      setBuses(apiBuses);
+      setAttendance(apiAttendance);
+      setCachedData({
+        ...cached,
+        teams: sorted,
+        students: apiStudents,
+        mentors: apiMentors,
+        buses: apiBuses,
+        attendance: apiAttendance,
+      });
     } catch (err) {
       console.warn('Error loading teams:', err);
     } finally {
@@ -346,27 +405,37 @@ export default function AdminTeamsPage() {
     const targetTeamName = currentEditTeam.name;
     const mentorObj = mentors.find((m) => m.id === mentorIdToAssign);
 
-    // Optimistic UI updates
     if (mentorObj) {
+      const updatedMentorsList = [
+        ...(currentEditTeam.mentors || []).filter((m) => m.id !== mentorIdToAssign),
+        {
+          id: mentorObj.id,
+          name: mentorObj.fullName,
+          phone: mentorObj.phone,
+          email: mentorObj.email,
+          club: mentorObj.club,
+          branch: mentorObj.branch,
+          year: mentorObj.year,
+        },
+      ];
+      const updatedMentorIds = Array.from(new Set([...(currentEditTeam.mentorIds || []), mentorIdToAssign]));
+
+      const newTeamObj: Team = {
+        ...currentEditTeam,
+        mentorIds: updatedMentorIds,
+        mentors: updatedMentorsList,
+      };
+
+      const newMentorObj: User = {
+        ...mentorObj,
+        teamId: targetTeamId,
+        teamName: targetTeamName,
+        mentorType: 'cohort',
+      };
+
       setTeams((prev) =>
         prev.map((t) => {
-          if (t.id === targetTeamId) {
-            const updatedMentorIds = Array.from(new Set([...(t.mentorIds || []), mentorIdToAssign]));
-            const updatedMentors = [
-              ...(t.mentors || []).filter((m) => m.id !== mentorIdToAssign),
-              {
-                id: mentorObj.id,
-                name: mentorObj.fullName,
-                phone: mentorObj.phone,
-                email: mentorObj.email,
-                club: mentorObj.club,
-                branch: mentorObj.branch,
-                year: mentorObj.year,
-              },
-            ];
-            return { ...t, mentorIds: updatedMentorIds, mentors: updatedMentors };
-          }
-          // Remove from other teams if present
+          if (t.id === targetTeamId) return newTeamObj;
           return {
             ...t,
             mentorIds: (t.mentorIds || []).filter((id) => id !== mentorIdToAssign),
@@ -376,12 +445,23 @@ export default function AdminTeamsPage() {
       );
 
       setMentors((prev) =>
-        prev.map((m) =>
-          m.id === mentorIdToAssign
-            ? { ...m, teamId: targetTeamId, teamName: targetTeamName, mentorType: 'cohort' }
-            : m
-        )
+        prev.map((m) => (m.id === mentorIdToAssign ? newMentorObj : m))
       );
+
+      // Cache sync
+      const c = getCachedData();
+      if (c) {
+        const cTeams = (c.teams || []).map((t: Team) => (t.id === targetTeamId ? newTeamObj : t));
+        const cMentors = (c.mentors || []).map((m: User) => (m.id === mentorIdToAssign ? newMentorObj : m));
+        setCachedData({ ...c, teams: cTeams, mentors: cMentors });
+      }
+
+      // Direct Firestore cloud sync
+      try {
+        const { saveTeamToFirestore, saveUserToFirestore } = await import('@/lib/firebase-db');
+        saveTeamToFirestore(newTeamObj).catch(() => {});
+        saveUserToFirestore(newMentorObj).catch(() => {});
+      } catch {}
     }
 
     try {
@@ -426,6 +506,48 @@ export default function AdminTeamsPage() {
           : m
       )
     );
+
+    // Cache sync
+    const c = getCachedData();
+    if (c) {
+      const updatedTeams = (c.teams || []).map((t: Team) =>
+        t.id === teamId
+          ? {
+              ...t,
+              mentorIds: (t.mentorIds || []).filter((id: string) => id !== mentorId),
+              mentors: (t.mentors || []).filter((m: any) => m.id !== mentorId),
+            }
+          : t
+      );
+      const updatedMentors = (c.mentors || []).map((m: User) =>
+        m.id === mentorId
+          ? { ...m, teamId: undefined, teamName: undefined, mentorType: 'support' as const }
+          : m
+      );
+      setCachedData({ ...c, teams: updatedTeams, mentors: updatedMentors });
+    }
+
+    // Direct Firestore cloud sync
+    try {
+      const { saveTeamToFirestore, saveUserToFirestore } = await import('@/lib/firebase-db');
+      const teamObj = teams.find((t) => t.id === teamId);
+      if (teamObj) {
+        saveTeamToFirestore({
+          ...teamObj,
+          mentorIds: (teamObj.mentorIds || []).filter((id) => id !== mentorId),
+          mentors: (teamObj.mentors || []).filter((m) => m.id !== mentorId),
+        }).catch(() => {});
+      }
+      const mentorObj = mentors.find((m) => m.id === mentorId);
+      if (mentorObj) {
+        saveUserToFirestore({
+          ...mentorObj,
+          teamId: undefined,
+          teamName: undefined,
+          mentorType: 'support',
+        }).catch(() => {});
+      }
+    } catch {}
 
     try {
       const res = await fetch('/api/data', {

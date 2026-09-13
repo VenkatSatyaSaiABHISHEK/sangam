@@ -49,6 +49,9 @@ export async function saveTeamToFirestore(team: Team): Promise<boolean> {
     const docRef = doc(dbFirestore, TEAMS_COL, team.id);
     const data = sanitizeForFirestore({
       ...team,
+      mentorIds: team.mentorIds || [],
+      mentors: team.mentors || [],
+      studentIds: team.studentIds || [],
       updatedAt: new Date().toISOString(),
     });
     await setDoc(docRef, data, { merge: true });
@@ -92,6 +95,9 @@ export async function saveUserToFirestore(user: User): Promise<boolean> {
     const docRef = doc(dbFirestore, USERS_COL, user.id);
     const data = sanitizeForFirestore({
       ...user,
+      teamId: user.teamId || null,
+      teamName: user.teamName || null,
+      mentorType: user.mentorType || (user.role === 'mentor' ? (user.teamId ? 'cohort' : 'support') : undefined),
       updatedAt: new Date().toISOString(),
     });
     await setDoc(docRef, data, { merge: true });
