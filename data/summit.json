@@ -942,13 +942,25 @@
         "all"
       ],
       "oneSubmissionPerUser": true,
-      "submissionCount": 1,
+      "submissionCount": 2,
       "isActive": true,
       "createdAt": "2026-09-13T11:14:18.682Z",
       "createdBy": "admin-01"
     }
   ],
   "submissions": [
+    {
+      "id": "sub_mu02lwu6_rfum",
+      "roomId": "test-room-99",
+      "eventId": "sangam-2027",
+      "submittedBy": {
+        "phone": "9573502848"
+      },
+      "answers": {
+        "f1": "DEVARAPALLI JYOTHI MANIKANTA"
+      },
+      "submittedAt": "2026-09-13T17:11:01.758Z"
+    },
     {
       "id": "sub_mtzvcivi",
       "roomId": "test-room-99",
@@ -971,10 +983,10 @@
       "studentName": "DEVARAPALLI JYOTHI MANIKANTA",
       "teamId": "team-9qya",
       "teamName": "Team 1",
-      "status": "absent",
-      "verifiedBy": "system",
-      "verifiedAt": "2026-09-13T08:31:26.847Z",
-      "method": "manual_admin"
+      "status": "present",
+      "verifiedBy": "room:test-room-99",
+      "verifiedAt": "2026-09-13T17:13:23.272Z",
+      "method": "dynamic_room"
     },
     {
       "id": "att-stu-1q4i1t",

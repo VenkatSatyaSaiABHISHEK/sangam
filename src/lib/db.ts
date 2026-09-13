@@ -109,6 +109,8 @@ class PersistentDatabase {
         const raw = nodeFs.readFileSync(dataFile, 'utf-8');
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
+          parsed.rooms = Array.isArray(parsed.rooms) ? parsed.rooms : [];
+          parsed.submissions = Array.isArray(parsed.submissions) ? parsed.submissions : [];
           this.syncAdminEmail(parsed);
           return parsed;
         }
@@ -193,6 +195,8 @@ class PersistentDatabase {
         const raw = nodeFs.readFileSync(dataFile, 'utf-8');
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
+          parsed.rooms = Array.isArray(parsed.rooms) ? parsed.rooms : [];
+          parsed.submissions = Array.isArray(parsed.submissions) ? parsed.submissions : [];
           this.syncAdminEmail(parsed);
           this.data = parsed;
           return;
@@ -1201,14 +1205,20 @@ class PersistentDatabase {
   // Dynamic Rooms CRUD
   getRooms(): Room[] {
     this.reload();
+    this.data.rooms = Array.isArray(this.data.rooms) ? this.data.rooms : [];
     return this.data.rooms;
   }
 
   getRoomById(id: string): Room | undefined {
-    return this.data.rooms.find((r) => r.id === id);
+    if (!id) return undefined;
+    this.reload();
+    this.data.rooms = Array.isArray(this.data.rooms) ? this.data.rooms : [];
+    return this.data.rooms.find((r) => r.id.toLowerCase() === id.toLowerCase());
   }
 
   createRoom(room: Room): Room {
+    this.reload();
+    this.data.rooms = Array.isArray(this.data.rooms) ? this.data.rooms : [];
     this.data.rooms.unshift(room);
     this.logActivity({
       id: `act_${Date.now()}`,
@@ -1226,9 +1236,11 @@ class PersistentDatabase {
   }
 
   saveRoom(room: Room): Room {
-    const idx = this.data.rooms.findIndex((r) => r.id === room.id);
+    this.reload();
+    this.data.rooms = Array.isArray(this.data.rooms) ? this.data.rooms : [];
+    const idx = this.data.rooms.findIndex((r) => r.id.toLowerCase() === room.id.toLowerCase());
     if (idx >= 0) {
-      this.data.rooms[idx] = room;
+      this.data.rooms[idx] = { ...this.data.rooms[idx], ...room };
     } else {
       this.data.rooms.unshift(room);
     }
@@ -1257,12 +1269,123 @@ class PersistentDatabase {
   }
 
   submitToRoom(submission: RoomSubmission): RoomSubmission {
-    this.data.submissions.unshift(submission);
+    this.reload();
+    this.data.submissions = Array.isArray(this.data.submissions) ? this.data.submissions : [];
+    if (!submission.submittedBy) {
+      submission.submittedBy = {};
+    }
+
+    const answers = submission.answers || {};
+
+    // Auto-detect phone from answers if not in submittedBy
+    if (!submission.submittedBy.phone) {
+      for (const [key, val] of Object.entries(answers)) {
+        if (typeof val === 'string') {
+          const digits = val.replace(/\D/g, '');
+          if (digits.length >= 10 && (key.includes('phone') || key.includes('mobile') || key === 'f_phone')) {
+            submission.submittedBy.phone = val.trim();
+            break;
+          }
+        }
+      }
+    }
+
+    // Auto-detect email from answers if not in submittedBy
+    if (!submission.submittedBy.email) {
+      for (const [key, val] of Object.entries(answers)) {
+        if (typeof val === 'string' && (key.includes('email') || val.includes('@'))) {
+          submission.submittedBy.email = val.trim().toLowerCase();
+          break;
+        }
+      }
+    }
+
+    // Auto-detect name from answers if not in submittedBy
+    if (!submission.submittedBy.fullName || submission.submittedBy.fullName === 'Participant') {
+      for (const [key, val] of Object.entries(answers)) {
+        if (typeof val === 'string' && (key.includes('name') || key === 'f_name') && val.trim().length > 1) {
+          submission.submittedBy.fullName = val.trim();
+          break;
+        }
+      }
+    }
+
+    const subPhone = submission.submittedBy?.phone?.replace(/\D/g, '').slice(-10);
+    const subEmail = submission.submittedBy?.email?.trim().toLowerCase();
+    let subUserId = submission.submittedBy?.userId;
+
+    // Match registered student by phone
+    if (!subUserId && subPhone) {
+      const matchedByPhone = this.getStudents().find(
+        (st) => st.phone && st.phone.replace(/\D/g, '').slice(-10) === subPhone
+      );
+      if (matchedByPhone) {
+        subUserId = matchedByPhone.id;
+        submission.submittedBy.userId = matchedByPhone.id;
+        if (!submission.submittedBy.fullName || submission.submittedBy.fullName === 'Participant') {
+          submission.submittedBy.fullName = matchedByPhone.fullName;
+        }
+        if (!submission.submittedBy.email && matchedByPhone.email) {
+          submission.submittedBy.email = matchedByPhone.email;
+        }
+      }
+    }
+
+    // Match registered student by email
+    if (!subUserId && subEmail) {
+      const matchedByEmail = this.getUserByEmail(subEmail);
+      if (matchedByEmail) {
+        subUserId = matchedByEmail.id;
+        submission.submittedBy.userId = matchedByEmail.id;
+        if (!submission.submittedBy.fullName || submission.submittedBy.fullName === 'Participant') {
+          submission.submittedBy.fullName = matchedByEmail.fullName;
+        }
+      }
+    }
+
+    // Match registered student by exact full name if still not matched
+    if (!subUserId && submission.submittedBy?.fullName && submission.submittedBy.fullName !== 'Participant') {
+      const cleanName = submission.submittedBy.fullName.trim().toLowerCase();
+      const matchedByName = this.getStudents().find(
+        (st) => st.fullName.trim().toLowerCase() === cleanName
+      );
+      if (matchedByName) {
+        subUserId = matchedByName.id;
+        submission.submittedBy.userId = matchedByName.id;
+      }
+    }
+
+    // Check if student has already submitted for this room (deduplication)
+    const existingIndex = this.data.submissions.findIndex(
+      (s) =>
+        s.roomId.toLowerCase() === submission.roomId.toLowerCase() &&
+        ((subUserId && s.submittedBy?.userId === subUserId) ||
+          (subEmail && s.submittedBy?.email?.trim().toLowerCase() === subEmail) ||
+          (subPhone && s.submittedBy?.phone?.replace(/\D/g, '').slice(-10) === subPhone))
+    );
+
+    if (existingIndex >= 0) {
+      this.data.submissions[existingIndex] = {
+        ...this.data.submissions[existingIndex],
+        ...submission,
+        updatedAt: new Date().toISOString(),
+      };
+    } else {
+      this.data.submissions.unshift(submission);
+    }
+
     const room = this.getRoomById(submission.roomId);
     if (room) {
-      room.submissionCount = (room.submissionCount || 0) + 1;
-      if (room.category === 'attendance' && submission.submittedBy?.userId) {
-        this.markAttendance(submission.submittedBy.userId, 'present', `room:${room.id}`);
+      room.submissionCount = this.data.submissions.filter((s) => s.roomId.toLowerCase() === room.id.toLowerCase()).length;
+
+      // Automatically convert to attendance if room is attendance-based
+      const isAttendanceRoom =
+        room.category === 'attendance' ||
+        room.title?.toLowerCase().includes('attendance') ||
+        room.purpose?.toLowerCase().includes('attendance');
+
+      if (isAttendanceRoom && subUserId) {
+        this.markAttendance(subUserId, 'present', `room:${room.id}`);
       }
     }
     this.saveToFile();
@@ -1270,8 +1393,10 @@ class PersistentDatabase {
   }
 
   getSubmissions(roomId?: string): RoomSubmission[] {
+    this.reload();
+    this.data.submissions = Array.isArray(this.data.submissions) ? this.data.submissions : [];
     if (roomId) {
-      return this.data.submissions.filter((s) => s.roomId === roomId);
+      return this.data.submissions.filter((s) => s.roomId.toLowerCase() === roomId.toLowerCase());
     }
     return this.data.submissions;
   }
@@ -1291,13 +1416,18 @@ class PersistentDatabase {
     status: AttendanceStatus,
     verifiedBy: string
   ): AttendanceRecord {
+    this.reload();
+    this.data.attendance = Array.isArray(this.data.attendance) ? this.data.attendance : [];
+    const student = this.data.users.find((u) => u.id === studentId);
     let rec = this.data.attendance.find((a) => a.studentId === studentId);
-    const student = this.getUserById(studentId);
 
     if (rec) {
       rec.status = status;
       rec.verifiedBy = verifiedBy;
       rec.verifiedAt = new Date().toISOString();
+      if (verifiedBy.startsWith('room:')) {
+        rec.method = 'dynamic_room';
+      }
     } else if (student) {
       rec = {
         id: `att-${student.id}`,

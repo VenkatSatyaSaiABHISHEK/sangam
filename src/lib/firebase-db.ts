@@ -12,13 +12,14 @@ import {
   limit,
 } from 'firebase/firestore';
 import { dbFirestore } from './firebase';
-import { Team, User, Bus, Room, Announcement, Photo, AttendanceRecord, ChannelMessage, ChannelSettings } from '@/types';
+import { Team, User, Bus, Room, Announcement, Photo, AttendanceRecord, ChannelMessage, ChannelSettings, RoomSubmission } from '@/types';
 
 // Collections
 const TEAMS_COL = 'teams';
 const USERS_COL = 'users';
 const BUSES_COL = 'buses';
 const ROOMS_COL = 'rooms';
+const SUBMISSIONS_COL = 'room_submissions';
 const ANNOUNCEMENTS_COL = 'announcements';
 const PHOTOS_COL = 'photos';
 const ATTENDANCE_COL = 'attendance';
@@ -407,4 +408,36 @@ export async function fetchChannelSettings(): Promise<ChannelSettings> {
   }
   return { studentCanPost: true };
 }
+
+// ----------------- ROOM SUBMISSIONS -----------------
+export async function saveSubmissionToFirestore(submission: RoomSubmission): Promise<boolean> {
+  if (!isFirestoreReady() || !dbFirestore) return false;
+  try {
+    const docRef = doc(dbFirestore, SUBMISSIONS_COL, submission.id);
+    await setDoc(docRef, sanitizeForFirestore(submission), { merge: true });
+    return true;
+  } catch (err: any) {
+    console.error(`[Firestore Error] Failed to save submission ${submission.id}:`, err.message || err);
+    return false;
+  }
+}
+
+export async function fetchSubmissionsFromFirestore(roomId?: string): Promise<RoomSubmission[]> {
+  if (!isFirestoreReady() || !dbFirestore) return [];
+  try {
+    const colRef = collection(dbFirestore, SUBMISSIONS_COL);
+    const q = roomId ? query(colRef, where('roomId', '==', roomId)) : query(colRef);
+    const snap = await getDocs(q);
+    const submissions: RoomSubmission[] = [];
+    snap.forEach((d) => submissions.push(d.data() as RoomSubmission));
+    submissions.sort(
+      (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
+    return submissions;
+  } catch (err: any) {
+    console.warn(`[Firestore Error] Could not fetch submissions:`, err.message || err);
+    return [];
+  }
+}
+
 

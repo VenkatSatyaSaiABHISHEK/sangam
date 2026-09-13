@@ -14,6 +14,7 @@ import {
   saveRoomToFirestore,
   deleteRoomFromFirestore,
   fetchRoomsFromFirestore,
+  saveSubmissionToFirestore,
 } from '@/lib/firebase-db';
 
 export const dynamic = 'force-dynamic';
@@ -92,6 +93,7 @@ export async function GET(req: NextRequest) {
       if (fields.has('announcements')) partialData.announcements = db.getAnnouncements();
       if (fields.has('rooms')) partialData.rooms = allRooms;
       if (fields.has('attendance')) partialData.attendance = db.getAttendance();
+      if (fields.has('submissions')) partialData.submissions = db.getSubmissions();
 
       return NextResponse.json(partialData, {
         headers: {
@@ -113,6 +115,7 @@ export async function GET(req: NextRequest) {
         announcements: db.getAnnouncements(),
         rooms: allRooms,
         attendance: db.getAttendance(),
+        submissions: db.getSubmissions(),
         photos: db.getPhotos(),
         activities: db.getActivityLogs(50),
       },
@@ -428,6 +431,17 @@ export async function POST(req: NextRequest) {
           saveRoomToFirestore(updatedRoom).catch((e) =>
             console.warn('Firestore sync room submission count:', e)
           );
+        }
+        saveSubmissionToFirestore(sub).catch((e) =>
+          console.warn('Firestore sync submission:', e)
+        );
+        if (sub.submittedBy?.userId) {
+          const att = db.getAttendanceForStudent(sub.submittedBy.userId);
+          if (att) {
+            saveAttendanceToFirestore(att).catch((e) =>
+              console.warn('Firestore sync attendance:', e)
+            );
+          }
         }
         return NextResponse.json({ success: true, submission: sub });
       }

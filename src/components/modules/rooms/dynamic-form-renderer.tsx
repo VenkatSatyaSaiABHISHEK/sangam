@@ -1,26 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Room, RoomSubmission, User } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
+import { useAuth } from '@/context/auth-context';
 import { db } from '@/lib/db';
+import { formatDateTime } from '@/lib/utils';
 import {
   CheckCircle2,
   MapPin,
   Camera,
-  QrCode,
-  Check,
-  AlertCircle,
-  ArrowRight,
-  UserCheck,
-  UserPlus,
   FolderUp,
   FileText,
-  Upload,
   X,
+  ArrowRight,
+  Phone,
+  Mail,
+  ShieldCheck,
+  UserCheck,
+  UserPlus,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 
 interface DynamicFormRendererProps {
@@ -29,15 +33,34 @@ interface DynamicFormRendererProps {
 }
 
 export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProps) {
+  const { user } = useAuth();
   const { showToast } = useToast();
+
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [students, setStudents] = useState<User[]>([]);
   const [gpsCoordinates, setGpsCoordinates] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
   const [capturingGps, setCapturingGps] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(true);
 
+  // Existing submission state: if already submitted, do not ask again!
+  const [existingSubmission, setExistingSubmission] = useState<RoomSubmission | null>(null);
+  const [roomSubmissions, setRoomSubmissions] = useState<RoomSubmission[]>([]);
+
+  // 1. Check local storage and room submissions on load
   useEffect(() => {
+    // Check localStorage first
+    try {
+      const localRecord = localStorage.getItem(`sangam_room_submitted_${room.id}`);
+      if (localRecord) {
+        const parsed = JSON.parse(localRecord);
+        if (parsed && parsed.roomId?.toLowerCase() === room.id.toLowerCase()) {
+          setExistingSubmission(parsed);
+        }
+      }
+    } catch {}
+
+    // Load registered students
     fetch('/api/data?include=students')
       .then((res) => res.json())
       .then((data) => {
@@ -46,21 +69,111 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
       .catch(() => {
         setStudents(db.getStudents());
       });
-  }, []);
+
+    // Fetch existing room submissions to check for server-side deduplication
+    fetch(`/api/rooms/${room.id}/submissions`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.submissions)) {
+          setRoomSubmissions(data.submissions);
+
+          // If user is authenticated, check if they already submitted
+          if (user) {
+            const userPhone = user.phone?.replace(/\D/g, '').slice(-10);
+            const userEmail = user.email?.trim().toLowerCase();
+            const matchedSub = data.submissions.find(
+              (s: RoomSubmission) =>
+                (s.submittedBy?.userId && s.submittedBy.userId === user.id) ||
+                (userEmail && s.submittedBy?.email?.trim().toLowerCase() === userEmail) ||
+                (userPhone && s.submittedBy?.phone?.replace(/\D/g, '').slice(-10) === userPhone)
+            );
+            if (matchedSub) {
+              setExistingSubmission(matchedSub);
+              try {
+                localStorage.setItem(`sangam_room_submitted_${room.id}`, JSON.stringify(matchedSub));
+              } catch {}
+            }
+          }
+        }
+      })
+      .catch((err) => console.warn('Error fetching submissions for deduplication:', err))
+      .finally(() => {
+        setCheckingExisting(false);
+      });
+  }, [room.id, user]);
+
+  // Pre-fill fields if user is authenticated and hasn't filled them yet
+  useEffect(() => {
+    if (!user || existingSubmission) return;
+    setFormData((prev) => {
+      const updated = { ...prev };
+      room.fields.forEach((field) => {
+        if (updated[field.id] !== undefined) return;
+        const lowerLabel = field.label.toLowerCase();
+        if (field.type === 'phone' || lowerLabel.includes('phone') || field.id === 'f_phone') {
+          if (user.phone) updated[field.id] = user.phone;
+        } else if (field.type === 'email' || lowerLabel.includes('email') || field.id === 'f_email') {
+          if (user.email) updated[field.id] = user.email;
+        } else if (lowerLabel.includes('name') || field.id === 'f_name') {
+          if (user.fullName) updated[field.id] = user.fullName;
+        } else if (field.type === 'yes_no' && field.defaultValue) {
+          updated[field.id] = field.defaultValue;
+        }
+      });
+      return updated;
+    });
+  }, [user, room.fields, existingSubmission]);
 
   const handleFieldChange = (fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
   };
 
-  // Find email field if present
-  const emailField = room.fields.find((f) => f.type === 'email' || f.id.includes('email'));
-  const currentEmail = (emailField ? formData[emailField.id] : '')?.trim().toLowerCase() || '';
+  // Find phone and email from current form state
+  const phoneField = room.fields.find((f) => f.type === 'phone' || f.id.includes('phone') || f.label.toLowerCase().includes('phone'));
+  const currentPhone = (phoneField ? formData[phoneField.id] : '')?.toString().trim() || '';
+  const cleanPhone = currentPhone.replace(/\D/g, '').slice(-10);
 
-  // Smart student recognition
+  const emailField = room.fields.find((f) => f.type === 'email' || f.id.includes('email') || f.label.toLowerCase().includes('email'));
+  const currentEmail = (emailField ? formData[emailField.id] : '')?.toString().trim().toLowerCase() || '';
+
+  const nameField = room.fields.find((f) => f.label.toLowerCase().includes('name') || f.id === 'f_name');
+
+  // Smart student recognition from phone or email
   const matchedStudent = useMemo(() => {
-    if (!currentEmail || !currentEmail.includes('@')) return null;
-    return students.find((s) => s.email.toLowerCase() === currentEmail) || null;
-  }, [currentEmail, students]);
+    if (cleanPhone.length >= 10) {
+      const byPhone = students.find((s) => s.phone && s.phone.replace(/\D/g, '').slice(-10) === cleanPhone);
+      if (byPhone) return byPhone;
+    }
+    if (currentEmail && currentEmail.includes('@') && currentEmail.includes('.')) {
+      const byEmail = students.find((s) => s.email.toLowerCase() === currentEmail);
+      if (byEmail) return byEmail;
+    }
+    return null;
+  }, [cleanPhone, currentEmail, students]);
+
+  // When a student is recognized, auto-fill student's Name and check if they already submitted
+  useEffect(() => {
+    if (matchedStudent) {
+      if (nameField && !formData[nameField.id]) {
+        handleFieldChange(nameField.id, matchedStudent.fullName);
+      }
+      // Check if this matched student has already submitted
+      const studentPhone = matchedStudent.phone?.replace(/\D/g, '').slice(-10);
+      const studentEmail = matchedStudent.email?.toLowerCase();
+      const existing = roomSubmissions.find(
+        (s) =>
+          (s.submittedBy?.userId && s.submittedBy.userId === matchedStudent.id) ||
+          (studentPhone && s.submittedBy?.phone?.replace(/\D/g, '').slice(-10) === studentPhone) ||
+          (studentEmail && s.submittedBy?.email?.toLowerCase() === studentEmail)
+      );
+      if (existing) {
+        setExistingSubmission(existing);
+        try {
+          localStorage.setItem(`sangam_room_submitted_${room.id}`, JSON.stringify(existing));
+        } catch {}
+      }
+    }
+  }, [matchedStudent, nameField, formData, roomSubmissions, room.id]);
 
   const isNewStudentEmail =
     room.category === 'attendance' &&
@@ -100,22 +213,36 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
 
     // Check required fields
     for (const field of room.fields) {
-      if (field.required && !formData[field.id]) {
-        showToast('Missing Required Field', `Please complete: ${field.label}`, 'error');
+      if (field.required && (formData[field.id] === undefined || formData[field.id] === '')) {
+        showToast('Required Field Missing', `Please complete: ${field.label}`, 'error');
         return;
       }
     }
 
     if (isNewStudentEmail && !formData.new_student_name?.trim()) {
-      showToast('Participant Name Required', 'Please enter your Full Name to complete attendance registration.', 'error');
+      showToast('Participant Name Required', 'Please enter your Full Name to complete registration.', 'error');
       return;
     }
 
     setLoading(true);
 
-    let finalUserId = matchedStudent?.id;
-    let finalName = matchedStudent?.fullName || formData.new_student_name?.trim() || formData.f_name || 'Participant';
-    let finalPhone = matchedStudent?.phone || formData.new_student_phone?.trim() || formData.f_phone;
+    let finalUserId = matchedStudent?.id || user?.id;
+    let finalName =
+      matchedStudent?.fullName ||
+      (nameField ? formData[nameField.id] : '') ||
+      formData.new_student_name?.trim() ||
+      formData.f_name ||
+      user?.fullName ||
+      'Participant';
+    let finalPhone =
+      matchedStudent?.phone ||
+      currentPhone ||
+      formData.new_student_phone?.trim() ||
+      user?.phone;
+    let finalEmail =
+      matchedStudent?.email ||
+      currentEmail ||
+      user?.email;
 
     // Auto-register new student if it's an attendance room and new email
     if (isNewStudentEmail && formData.new_student_name?.trim()) {
@@ -128,7 +255,7 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
             payload: {
               fullName: formData.new_student_name.trim(),
               email: currentEmail,
-              phone: formData.new_student_phone?.trim() || '+1 000 000 0000',
+              phone: finalPhone || '+91 000 000 0000',
               branch: formData.new_student_branch?.trim() || 'General',
               year: '1st Year',
             },
@@ -146,88 +273,199 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
       }
     }
 
-    // Mark attendance if room is attendance
-    if (room.category === 'attendance' && finalUserId) {
-      fetch('/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'markAttendance',
-          payload: {
-            studentId: finalUserId,
-            status: 'present',
-            verifiedBy: `room:${room.id}`,
-          },
-        }),
-      }).catch((err) => console.warn('Attendance sync error:', err));
-    }
-
     const submission: RoomSubmission = {
-      id: `sub_${Date.now().toString(36)}`,
+      id: `sub_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`,
       roomId: room.id,
-      eventId: room.eventId,
+      eventId: room.eventId || 'sangam-2027',
       submittedBy: {
         userId: finalUserId,
         fullName: finalName,
-        email: currentEmail || undefined,
-        phone: finalPhone,
+        email: finalEmail || undefined,
+        phone: finalPhone || undefined,
       },
       answers: formData,
       gpsCoordinates: gpsCoordinates || undefined,
       submittedAt: new Date().toISOString(),
     };
 
-    db.submitToRoom(submission);
+    // 1. Submit to API (saves to DB, syncs to Firestore, marks attendance automatically)
     try {
-      await fetch('/api/data', {
+      const res = await fetch(`/api/rooms/${room.id}/submissions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'submitToRoom', payload: submission }),
+        body: JSON.stringify(submission),
       });
+
+      if (!res.ok) {
+        // Fallback to /api/data
+        await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'submitToRoom', payload: submission }),
+        });
+      }
     } catch (err) {
-      console.warn('API submitToRoom error:', err);
+      console.warn('Submission network error:', err);
     }
 
+    // 2. Cache in localStorage so student is never asked again
+    try {
+      localStorage.setItem(`sangam_room_submitted_${room.id}`, JSON.stringify(submission));
+    } catch {}
+
+    setExistingSubmission(submission);
     setLoading(false);
-    setSubmitted(true);
-    showToast('Submission Recorded', 'Your response and attendance have been saved.', 'success');
+    showToast('Submission Recorded', 'Your response has been saved and verified.', 'success');
     if (onSuccess) onSuccess();
   };
 
-  if (submitted) {
-    return (
-      <Card className="p-8 text-center space-y-4 max-w-md mx-auto bg-white border-neutral-200">
-        <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
-          <CheckCircle2 className="w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-neutral-900 tracking-tight">
-            Submission Confirmed
-          </h3>
-          <p className="text-xs text-neutral-500 mt-1">
-            Thank you. Your responses for &quot;{room.title}&quot; have been received and verified by the Sangam Command Center.
-          </p>
-        </div>
+  // ==========================================
+  // IF ALREADY SUBMITTED: DO NOT ASK AGAIN!
+  // ==========================================
+  if (existingSubmission) {
+    const isAttendanceRoom =
+      room.category === 'attendance' ||
+      room.title?.toLowerCase().includes('attendance') ||
+      room.purpose?.toLowerCase().includes('attendance');
 
-        <div className="pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSubmitted(false);
-              setFormData({});
-            }}
-            className="text-xs"
-          >
-            Submit Another Response
-          </Button>
+    const submitterName =
+      existingSubmission.submittedBy?.fullName ||
+      user?.fullName ||
+      (nameField && existingSubmission.answers?.[nameField.id]) ||
+      'Registered Participant';
+
+    const submitterPhone =
+      existingSubmission.submittedBy?.phone ||
+      (phoneField && existingSubmission.answers?.[phoneField.id]) ||
+      user?.phone;
+
+    const submitterEmail =
+      existingSubmission.submittedBy?.email ||
+      (emailField && existingSubmission.answers?.[emailField.id]) ||
+      user?.email;
+
+    return (
+      <div className="space-y-6 max-w-lg mx-auto">
+        {/* Confirmed Card */}
+        <div className="p-6 rounded-2xl bg-white border border-neutral-200 shadow-sm text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-7 h-7" />
+          </div>
+
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Response Already Recorded</span>
+            </span>
+
+            <h2 className="text-xl font-bold tracking-tight text-neutral-950">
+              You&apos;re All Set!
+            </h2>
+            <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+              You have already completed the submission for &ldquo;{room.title}&rdquo;.
+              Your attendance and responses are safely locked.
+            </p>
+          </div>
+
+          {/* Student & Attendance Status Box */}
+          <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-left space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
+                Participant Details
+              </span>
+              {isAttendanceRoom && (
+                <Badge className="bg-emerald-600 text-white gap-1 text-[10px] font-bold">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Marked Present</span>
+                </Badge>
+              )}
+            </div>
+
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-500">Student Name:</span>
+                <span className="font-bold text-neutral-900">{submitterName}</span>
+              </div>
+
+              {submitterPhone && (
+                <div className="flex items-center justify-between font-mono">
+                  <span className="text-neutral-500">Phone:</span>
+                  <span className="font-semibold text-neutral-800">{submitterPhone}</span>
+                </div>
+              )}
+
+              {submitterEmail && (
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-500">Email:</span>
+                  <span className="text-neutral-700 truncate max-w-[200px]">{submitterEmail}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-neutral-500 pt-1">
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Submitted On:
+                </span>
+                <span className="font-mono text-[11px] text-neutral-700">
+                  {formatDateTime(existingSubmission.submittedAt)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Answer Preview */}
+          {room.fields.length > 0 && existingSubmission.answers && (
+            <div className="p-4 rounded-xl bg-neutral-50/50 border border-neutral-200 text-left space-y-2">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">
+                Submitted Answers
+              </span>
+              <div className="space-y-1.5 text-xs divide-y divide-neutral-200/60">
+                {room.fields.map((f) => {
+                  const val = existingSubmission.answers[f.id];
+                  if (val === undefined || val === null || val === '') return null;
+                  return (
+                    <div key={f.id} className="pt-1.5 first:pt-0 flex items-start justify-between gap-2">
+                      <span className="text-neutral-500 text-[11px]">{f.label}:</span>
+                      <span className="font-medium text-neutral-900 text-right text-[11px] max-w-[220px] truncate">
+                        {typeof val === 'object' ? (val.name || JSON.stringify(val)) : String(val)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="pt-2 text-[11px] text-neutral-400 font-mono">
+            ID: {existingSubmission.id} • NO DUPLICATE ENTRIES ALLOWED
+          </div>
         </div>
-      </Card>
+      </div>
     );
   }
 
+  // ==========================================
+  // INITIAL FORM (IF NOT YET SUBMITTED)
+  // ==========================================
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-lg mx-auto">
+      {/* Recognized Student Banner if Phone or Email Matched */}
+      {matchedStudent && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
+          <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Recognized Sangam Participant</span>
+          </div>
+          <p className="text-[11px] text-emerald-800 leading-relaxed">
+            Welcome, <strong>{matchedStudent.fullName}</strong>
+            {matchedStudent.branch ? ` (${matchedStudent.branch})` : ''}
+            {matchedStudent.teamName ? ` · Team ${matchedStudent.teamName}` : ''}.
+            Your attendance will be automatically linked and verified upon submission.
+          </p>
+        </div>
+      )}
+
+      {/* Render Dynamic Fields */}
       {room.fields.map((field) => {
         const value = formData[field.id] ?? '';
 
@@ -450,6 +688,23 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
               </div>
             );
 
+          case 'phone':
+            return (
+              <div key={field.id} className="space-y-1.5">
+                <Input
+                  type="tel"
+                  label={field.label + (field.required ? ' *' : '')}
+                  placeholder={field.placeholder || '+91 91000 10010'}
+                  value={value}
+                  onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                  required={field.required}
+                />
+                <p className="text-[11px] text-neutral-400">
+                  Enter your 10-digit mobile number to automatically verify and record your attendance.
+                </p>
+              </div>
+            );
+
           case 'email':
             return (
               <div key={field.id} className="space-y-2">
@@ -462,28 +717,15 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
                   required={field.required}
                 />
 
-                {/* Smart recognition badge if email matched */}
-                {matchedStudent && (
-                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-0.5">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Recognized Sangam Participant</span>
-                    </div>
-                    <p className="text-[11px] text-emerald-700">
-                      Welcome, <strong>{matchedStudent.fullName}</strong> ({matchedStudent.branch || 'CSE'} {matchedStudent.teamName ? `· ${matchedStudent.teamName}` : ''}). Your attendance will be confirmed automatically.
-                    </p>
-                  </div>
-                )}
-
                 {/* Smart new participant form if email is new in attendance room */}
                 {isNewStudentEmail && (
-                  <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200 text-xs text-blue-950 space-y-2.5">
-                    <div className="flex items-center gap-1.5 font-bold text-blue-900">
-                      <UserPlus className="w-4 h-4 text-blue-600 shrink-0" />
+                  <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 space-y-2.5">
+                    <div className="flex items-center gap-1.5 font-bold text-neutral-900">
+                      <UserPlus className="w-4 h-4 text-neutral-700 shrink-0" />
                       <span>New Participant Registration</span>
                     </div>
-                    <p className="text-[11px] text-blue-700 leading-relaxed">
-                      We didn&apos;t find this email in our pre-registered list. Please enter your details below so we can record your attendance.
+                    <p className="text-[11px] text-neutral-500 leading-relaxed">
+                      We didn&apos;t find this email in our pre-registered list. Enter your details below to confirm attendance.
                     </p>
 
                     <div className="space-y-2 pt-1">
@@ -544,7 +786,7 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
             );
 
           default: {
-            const inputType = field.type === 'phone' ? 'tel' : field.type === 'date' ? 'date' : field.type === 'time' ? 'time' : 'text';
+            const inputType = field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : field.type === 'time' ? 'time' : 'text';
             return (
               <Input
                 key={field.id}

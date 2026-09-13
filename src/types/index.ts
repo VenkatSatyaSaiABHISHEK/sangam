@@ -136,6 +136,7 @@ export interface RoomSubmission {
     accuracy?: number;
   };
   submittedAt: string;
+  updatedAt?: string;
   ipAddress?: string;
 }
 
