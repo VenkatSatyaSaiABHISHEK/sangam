@@ -24,6 +24,7 @@ import {
   Activity,
   CheckCircle2,
   AlertTriangle,
+  MessageSquare,
 } from 'lucide-react';
 
 import { getCachedData, setCachedData } from '@/lib/data-cache';
@@ -118,6 +119,12 @@ export default function AdminDashboardPage() {
             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
               <Users className="w-3.5 h-3.5 text-neutral-600" />
               <span>Students</span>
+            </Button>
+          </Link>
+          <Link href="/admin/channel">
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+              <MessageSquare className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Chat Permissions</span>
             </Button>
           </Link>
           <Link href="/admin/teams">

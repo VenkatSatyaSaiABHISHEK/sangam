@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export type AdminTab = 'teams' | 'students' | 'mentors' | 'teachers';
+export type AdminTab = 'teams' | 'students' | 'mentors' | 'teachers' | 'chat-permissions';
 
 interface AdminTopNavProps {
   activeTab: AdminTab;
@@ -14,6 +14,7 @@ const TABS: { id: AdminTab; label: string }[] = [
   { id: 'students', label: 'Students' },
   { id: 'mentors', label: 'Mentors' },
   { id: 'teachers', label: 'Teachers' },
+  { id: 'chat-permissions', label: 'Chat Permissions' },
 ];
 
 export function AdminTopNav({ activeTab, onTabChange }: AdminTopNavProps) {

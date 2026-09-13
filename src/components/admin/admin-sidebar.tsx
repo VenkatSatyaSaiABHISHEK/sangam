@@ -18,6 +18,7 @@ import {
   Settings,
   LogOut,
   ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -25,6 +26,7 @@ import { useAuth } from '@/context/auth-context';
 export const ADMIN_NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/students', label: 'Students', icon: Users },
+  { href: '/admin/channel', label: 'Chat Permissions', icon: MessageSquare },
   { href: '/admin/teams', label: 'Teams', icon: Layers },
   { href: '/admin/mentors', label: 'Mentors', icon: GraduationCap },
   { href: '/admin/teachers', label: 'Teachers', icon: Building },

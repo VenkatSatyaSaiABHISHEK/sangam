@@ -307,4 +307,6 @@ export interface ChannelSettings {
   studentCanPost: boolean;
   topic?: string;
   updatedAt?: string;
+  allowedStudentIds?: string[];
+  studentPermissions?: Record<string, boolean>;
 }
