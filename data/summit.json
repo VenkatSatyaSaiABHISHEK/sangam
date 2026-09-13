@@ -1437,6 +1437,20 @@
   ],
   "activityLogs": [
     {
+      "id": "act_1789313371508",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T15:29:31.508Z"
+    },
+    {
       "id": "act_1789308534336",
       "eventId": "summit-2027",
       "actorId": "stu-bviye5",
