@@ -1,0 +1,2271 @@
+{
+  "event": {
+    "id": "summit-2027",
+    "name": "Sangam 2027",
+    "venue": "Grand Tech Convention Pavilion & Innovation Hub",
+    "startDate": "2027-09-12T08:00:00.000Z",
+    "endDate": "2027-09-14T18:00:00.000Z",
+    "status": "active",
+    "stats": {
+      "totalStudents": 1,
+      "totalMentors": 0,
+      "totalFaculty": 0,
+      "totalJudges": 0,
+      "totalTeams": 0,
+      "totalBuses": 0
+    }
+  },
+  "users": [
+    {
+      "id": "admin-root",
+      "eventId": "summit-2027",
+      "role": "admin",
+      "fullName": "Administrator",
+      "email": "admin@summitconnect.org",
+      "phone": "+1 000 000 0000",
+      "status": "active",
+      "createdAt": "2026-09-12T11:32:01.985Z"
+    },
+    {
+      "id": "mentor-w6u9",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "VENKAT NALLA",
+      "email": "venkatnalla.official@gmail.com",
+      "phone": "9603980767",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "support",
+      "status": "active",
+      "createdAt": "2026-09-13T07:31:09.345Z",
+      "updatedAt": "2026-09-13T07:51:39.423Z",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9"
+    },
+    {
+      "id": "mentor-x4z0",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "BOBBILI VAMSI",
+      "email": "vickyvamsi634@gmail.com",
+      "phone": "8897552884",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:31:53.580Z",
+      "updatedAt": "2026-09-13T08:53:34.314Z",
+      "teamId": "team-flft",
+      "teamName": "Team 5"
+    },
+    {
+      "id": "mentor-xr6i",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "cheeday pujith  sai",
+      "email": "pujithcheeday@gmail.com",
+      "phone": "9885658567",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:32:22.362Z",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "updatedAt": "2026-09-13T08:53:07.760Z"
+    },
+    {
+      "id": "mentor-yelm",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "BORA VEERA PRASANNA KOUSHIK",
+      "email": "koushikbora2006@gmail.com",
+      "phone": "9059116060",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:32:52.714Z",
+      "teamId": "team-ez93",
+      "teamName": "Team 3"
+    },
+    {
+      "id": "mentor-yxui",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "Vedavyas pandula",
+      "email": "pandulavedavyas@gmail.com",
+      "phone": "7672056985",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:33:17.658Z",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8"
+    },
+    {
+      "id": "mentor-ztbt",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "KUDIPUDI SUPPRIYA",
+      "email": "suppriya@gmail.com",
+      "phone": "7013146069",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:33:58.457Z",
+      "updatedAt": "2026-09-13T08:53:25.965Z",
+      "teamId": "team-flft",
+      "teamName": "Team 5"
+    },
+    {
+      "id": "mentor-19gg",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "S.Aasritha",
+      "email": "aasrithasamayamanthula8@gmail.com",
+      "phone": "7981210978",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "support",
+      "status": "active",
+      "createdAt": "2026-09-13T07:35:06.016Z",
+      "updatedAt": "2026-09-13T08:53:02.122Z"
+    },
+    {
+      "id": "mentor-1ydw",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "S.Hemavathi",
+      "email": "saidhuhema11@gmail.com",
+      "phone": "9392521026",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "3th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:35:38.324Z",
+      "teamId": "team-fea2",
+      "teamName": "Team 4"
+    },
+    {
+      "id": "mentor-2poj",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "K.pavani",
+      "email": "pavanikulla1245@gmail.com",
+      "phone": "6301286224",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "4th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:36:13.699Z",
+      "teamId": "team-ez93",
+      "teamName": "Team 3"
+    },
+    {
+      "id": "mentor-35a2",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "lithika sraya c",
+      "email": "lithikasrayac@gmail.com",
+      "phone": "8122600858",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "4th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:36:33.914Z",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2"
+    },
+    {
+      "id": "mentor-3mqe",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "Kondapalli Raja Rajeswari Devi Deepa",
+      "email": "kondapallideepa9@gmail.com",
+      "phone": "9052630638",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "4th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:36:56.534Z",
+      "teamId": "team-9qya",
+      "teamName": "Team 1"
+    },
+    {
+      "id": "mentor-4tfp",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "PECHETTI SRI RAMA CHANDRA MURTHI",
+      "email": "murthy@gmail.com",
+      "phone": "8886295990",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "4th Year",
+      "mentorType": "cohort",
+      "status": "active",
+      "createdAt": "2026-09-13T07:37:51.877Z",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6"
+    },
+    {
+      "id": "mentor-5o10",
+      "eventId": "summit-2027",
+      "role": "mentor",
+      "fullName": "Abhishek",
+      "email": "abhi31mahi@gmail.com",
+      "phone": "6302015687",
+      "club": "Smart City Lab",
+      "branch": "CSE",
+      "year": "4th Year",
+      "mentorType": "support",
+      "status": "active",
+      "createdAt": "2026-09-13T07:38:31.524Z",
+      "updatedAt": "2026-09-13T08:46:27.382Z",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9"
+    },
+    {
+      "id": "stu-1q4eqo",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "DEVARAPALLI JYOTHI MANIKANTA",
+      "email": "9573502848@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9573502848",
+      "teamId": "team-9qya",
+      "teamName": "Team 1",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.846Z"
+    },
+    {
+      "id": "stu-1q4i1t",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "MORTHA AMRUTHA VARSHINI",
+      "email": "9951379761@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9951379761",
+      "teamId": "team-9qya",
+      "teamName": "Team 1",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.850Z"
+    },
+    {
+      "id": "stu-1q4ke7",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "AKULA VENKATA SRI DURGA",
+      "email": "8297541345@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8297541345",
+      "teamId": "team-9qya",
+      "teamName": "Team 1",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.852Z"
+    },
+    {
+      "id": "stu-1q4mgx",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "NAYANA SOWMYA",
+      "email": "6305643642@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "6305643642",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.854Z"
+    },
+    {
+      "id": "stu-1q4p2y",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "KOLACHALA SAHASRAHASINI",
+      "email": "9652341998@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9652341998",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.857Z"
+    },
+    {
+      "id": "stu-1q4sd3",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "GUNDUPALLI SRI GOWRI AKHIL TEJA",
+      "email": "9052249666@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9052249666",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.860Z"
+    },
+    {
+      "id": "stu-1q4uqi",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "KAPPALA JEEVANA SAI",
+      "email": "9985534516@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9985534516",
+      "teamId": "team-ez93",
+      "teamName": "Team 3",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.862Z"
+    },
+    {
+      "id": "stu-1q4wbn",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "VADDI HARAVINDA",
+      "email": "9492847696@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9492847696",
+      "teamId": "team-ez93",
+      "teamName": "Team 3",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.864Z"
+    },
+    {
+      "id": "stu-1q4yq6",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "PALLA JAYANTHI",
+      "email": "9885835428@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9885835428",
+      "teamId": "team-ez93",
+      "teamName": "Team 3",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.866Z"
+    },
+    {
+      "id": "stu-1q5i4y",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "ACHANTA PRIYANKA",
+      "email": "9963239353@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9963239353",
+      "teamId": "team-fea2",
+      "teamName": "Team 4",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.887Z"
+    },
+    {
+      "id": "stu-1q5pl5",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "TURUGOLI ABHINAY",
+      "email": "9949099194@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9949099194",
+      "teamId": "team-fea2",
+      "teamName": "Team 4",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.893Z"
+    },
+    {
+      "id": "stu-1q5v7s",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "SYED RAFIYA",
+      "email": "9989865379@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9989865379",
+      "teamId": "team-fea2",
+      "teamName": "Team 4",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.899Z"
+    },
+    {
+      "id": "stu-1q5zc3",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "TATIKONDA HARSHITHA",
+      "email": "9701301896@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9701301896",
+      "teamId": "team-flft",
+      "teamName": "Team 5",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.903Z"
+    },
+    {
+      "id": "stu-1q61kt",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "PULIDINDI MEGHANA SAISRI",
+      "email": "8179393575@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8179393575",
+      "teamId": "team-flft",
+      "teamName": "Team 5",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.905Z"
+    },
+    {
+      "id": "stu-1q6340",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "SEERAM RAMADEVI",
+      "email": "6302203067@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "6302203067",
+      "teamId": "team-flft",
+      "teamName": "Team 5",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.907Z"
+    },
+    {
+      "id": "stu-1q65m1",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "SUNKARA HEMA SRI KAVYA",
+      "email": "8522015823@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8522015823",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.909Z"
+    },
+    {
+      "id": "stu-1q67hg",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "VANDRANKI LEELARANI",
+      "email": "7972886416@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "7972886416",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.912Z"
+    },
+    {
+      "id": "stu-1q6a49",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "LATCHIREDDY KOMALI",
+      "email": "9949025288@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9949025288",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.914Z"
+    },
+    {
+      "id": "stu-1q6c4l",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "KOMMOJU KUSUMA",
+      "email": "9542578363@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9542578363",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.916Z"
+    },
+    {
+      "id": "stu-1q6ec1",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "TATA SONY",
+      "email": "7893951079@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "7893951079",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.919Z"
+    },
+    {
+      "id": "stu-1q6h8j",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "ANNE HARSHINI",
+      "email": "8790951266@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8790951266",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.921Z"
+    },
+    {
+      "id": "stu-1q6jm0",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "JONNALAGADDA TULASI CHOWDARY",
+      "email": "8919460603@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8919460603",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.923Z"
+    },
+    {
+      "id": "stu-1q6lpb",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "GUVVALA NEHAREDDY",
+      "email": "9912781408@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9912781408",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.925Z"
+    },
+    {
+      "id": "stu-1q6on1",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "DONGA SAASE SNEHAAWLL",
+      "email": "9059168969@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9059168969",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.928Z"
+    },
+    {
+      "id": "stu-1q6qiz",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "GUDURI RAJESH KUMAR",
+      "email": "7382897259@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "7382897259",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.930Z"
+    },
+    {
+      "id": "stu-1q6s6m",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "CHALAMALA JNANESWAR PAVAN SAI",
+      "email": "8499064162@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8499064162",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.932Z"
+    },
+    {
+      "id": "stu-1q6ujz",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "NELAPUDI GOWTHAM",
+      "email": "7396578859@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "7396578859",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.935Z"
+    },
+    {
+      "id": "stu-1q6xk1",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "GUDIVADA SAI KUMAR",
+      "email": "8978426936@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "8978426936",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.937Z"
+    },
+    {
+      "id": "stu-1q70cg",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "MANDANGI NIKHIL",
+      "email": "9550990281@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9550990281",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.940Z"
+    },
+    {
+      "id": "stu-1q72j3",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "BELLAPU MOULI CHANDRIKA",
+      "email": "9848762954@student.sangam.org",
+      "isProvisionalEmail": true,
+      "phone": "9848762954",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "branch": "CSE",
+      "year": "1st Year",
+      "status": "active",
+      "createdAt": "2026-09-13T08:31:26.942Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": "team-9qya",
+      "eventId": "summit-2027",
+      "name": "Team 1",
+      "color": "#DB2777",
+      "mentorIds": [],
+      "mentors": [],
+      "supportMentorIds": [
+        "mentor-arjun01"
+      ],
+      "supportMentors": [
+        {
+          "id": "mentor-arjun01",
+          "name": "Arjun Patel",
+          "phone": "+91 9876543203",
+          "email": "arjun.patel@summitconnect.org",
+          "club": "KSCS",
+          "branch": "AI & Data Science",
+          "year": "3rd Year"
+        }
+      ],
+      "studentIds": [
+        "stu-1q4eqo",
+        "stu-1q4i1t",
+        "stu-1q4ke7"
+      ],
+      "tableNumber": "Table 1",
+      "status": "active",
+      "createdAt": "2026-09-12T13:29:56.914Z"
+    },
+    {
+      "id": "team-2b8c",
+      "eventId": "summit-2027",
+      "name": "Team 2",
+      "color": "#2563EB",
+      "mentorIds": [],
+      "mentors": [],
+      "supportMentorIds": [
+        "mentor-arjun01"
+      ],
+      "supportMentors": [
+        {
+          "id": "mentor-arjun01",
+          "name": "Arjun Patel",
+          "phone": "+91 9876543203",
+          "email": "arjun.patel@summitconnect.org",
+          "club": "KSCS",
+          "branch": "AI & Data Science",
+          "year": "3rd Year"
+        }
+      ],
+      "studentIds": [
+        "stu-1q4mgx",
+        "stu-1q4p2y",
+        "stu-1q4sd3"
+      ],
+      "tableNumber": "Table 2",
+      "status": "active",
+      "createdAt": "2026-09-12T16:20:00.000Z"
+    },
+    {
+      "id": "team-ez93",
+      "eventId": "summit-2027",
+      "name": "Team 3",
+      "color": "#059669",
+      "mentorIds": [],
+      "mentors": [],
+      "studentIds": [
+        "stu-1q4uqi",
+        "stu-1q4wbn",
+        "stu-1q4yq6"
+      ],
+      "tableNumber": "Table 3",
+      "status": "active",
+      "createdAt": "2026-09-13T07:45:45.975Z"
+    },
+    {
+      "id": "team-fea2",
+      "eventId": "summit-2027",
+      "name": "Team 4",
+      "color": "#0D9488",
+      "mentorIds": [],
+      "mentors": [],
+      "studentIds": [
+        "stu-1q5i4y",
+        "stu-1q5pl5",
+        "stu-1q5v7s"
+      ],
+      "tableNumber": "Table 4",
+      "status": "active",
+      "createdAt": "2026-09-13T07:46:05.450Z"
+    },
+    {
+      "id": "team-flft",
+      "eventId": "summit-2027",
+      "name": "Team 5",
+      "color": "#D97706",
+      "mentorIds": [
+        "mentor-ztbt",
+        "mentor-x4z0"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-ztbt",
+          "name": "KUDIPUDI SUPPRIYA",
+          "phone": "7013146069",
+          "email": "suppriya@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        },
+        {
+          "id": "mentor-x4z0",
+          "name": "BOBBILI VAMSI",
+          "phone": "8897552884",
+          "email": "vickyvamsi634@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        }
+      ],
+      "studentIds": [
+        "stu-1q5zc3",
+        "stu-1q61kt",
+        "stu-1q6340"
+      ],
+      "tableNumber": "Table 5",
+      "status": "active",
+      "createdAt": "2026-09-13T07:46:14.729Z"
+    },
+    {
+      "id": "team-h2sm",
+      "eventId": "summit-2027",
+      "name": "Team 6",
+      "color": "#059669",
+      "mentorIds": [],
+      "mentors": [],
+      "studentIds": [
+        "stu-1q65m1",
+        "stu-1q67hg",
+        "stu-1q6a49"
+      ],
+      "tableNumber": "Table 6",
+      "status": "active",
+      "createdAt": "2026-09-13T07:47:23.878Z"
+    },
+    {
+      "id": "team-hevu",
+      "eventId": "summit-2027",
+      "name": "Team 7",
+      "color": "#7C3AED",
+      "mentorIds": [
+        "mentor-xr6i"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-xr6i",
+          "name": "cheeday pujith  sai",
+          "phone": "9885658567",
+          "email": "pujithcheeday@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        }
+      ],
+      "studentIds": [
+        "stu-1q6c4l",
+        "stu-1q6ec1",
+        "stu-1q6h8j",
+        "stu-1q6jm0"
+      ],
+      "tableNumber": "Table 6",
+      "status": "active",
+      "createdAt": "2026-09-13T07:47:39.546Z"
+    },
+    {
+      "id": "team-hlpx",
+      "eventId": "summit-2027",
+      "name": "Team 8",
+      "color": "#7C3AED",
+      "mentorIds": [
+        "mentor-yelm",
+        "mentor-yxui"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-yelm",
+          "name": "BORA VEERA PRASANNA KOUSHIK",
+          "phone": "9059116060",
+          "email": "koushikbora2006@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        },
+        {
+          "id": "mentor-yxui",
+          "name": "Vedavyas pandula",
+          "phone": "7672056985",
+          "email": "pandulavedavyas@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        }
+      ],
+      "studentIds": [
+        "stu-1q6lpb",
+        "stu-1q6on1",
+        "stu-1q6qiz",
+        "stu-1q6s6m"
+      ],
+      "tableNumber": "Table 7",
+      "status": "active",
+      "createdAt": "2026-09-13T07:47:48.405Z"
+    },
+    {
+      "id": "team-hsmf",
+      "eventId": "summit-2027",
+      "name": "Team 9",
+      "color": "#2563EB",
+      "mentorIds": [],
+      "mentors": [],
+      "studentIds": [
+        "stu-1q6ujz",
+        "stu-1q6xk1",
+        "stu-1q70cg",
+        "stu-1q72j3"
+      ],
+      "tableNumber": "Table 9",
+      "status": "active",
+      "createdAt": "2026-09-13T07:47:57.351Z"
+    }
+  ],
+  "buses": [],
+  "rooms": [],
+  "submissions": [],
+  "attendance": [
+    {
+      "id": "att-stu-1q4eqo",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4eqo",
+      "studentName": "DEVARAPALLI JYOTHI MANIKANTA",
+      "teamId": "team-9qya",
+      "teamName": "Team 1",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.847Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4i1t",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4i1t",
+      "studentName": "MORTHA AMRUTHA VARSHINI",
+      "teamId": "team-9qya",
+      "teamName": "Team 1",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.850Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4ke7",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4ke7",
+      "studentName": "AKULA VENKATA SRI DURGA",
+      "teamId": "team-9qya",
+      "teamName": "Team 1",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.852Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4mgx",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4mgx",
+      "studentName": "NAYANA SOWMYA",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.854Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4p2y",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4p2y",
+      "studentName": "KOLACHALA SAHASRAHASINI",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.858Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4sd3",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4sd3",
+      "studentName": "GUNDUPALLI SRI GOWRI AKHIL TEJA",
+      "teamId": "team-2b8c",
+      "teamName": "Team 2",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.860Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4uqi",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4uqi",
+      "studentName": "KAPPALA JEEVANA SAI",
+      "teamId": "team-ez93",
+      "teamName": "Team 3",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.862Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4wbn",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4wbn",
+      "studentName": "VADDI HARAVINDA",
+      "teamId": "team-ez93",
+      "teamName": "Team 3",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.864Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q4yq6",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q4yq6",
+      "studentName": "PALLA JAYANTHI",
+      "teamId": "team-ez93",
+      "teamName": "Team 3",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.867Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q5i4y",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q5i4y",
+      "studentName": "ACHANTA PRIYANKA",
+      "teamId": "team-fea2",
+      "teamName": "Team 4",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.887Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q5pl5",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q5pl5",
+      "studentName": "TURUGOLI ABHINAY",
+      "teamId": "team-fea2",
+      "teamName": "Team 4",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.893Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q5v7s",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q5v7s",
+      "studentName": "SYED RAFIYA",
+      "teamId": "team-fea2",
+      "teamName": "Team 4",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.899Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q5zc3",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q5zc3",
+      "studentName": "TATIKONDA HARSHITHA",
+      "teamId": "team-flft",
+      "teamName": "Team 5",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.903Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q61kt",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q61kt",
+      "studentName": "PULIDINDI MEGHANA SAISRI",
+      "teamId": "team-flft",
+      "teamName": "Team 5",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.905Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6340",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6340",
+      "studentName": "SEERAM RAMADEVI",
+      "teamId": "team-flft",
+      "teamName": "Team 5",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.907Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q65m1",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q65m1",
+      "studentName": "SUNKARA HEMA SRI KAVYA",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.909Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q67hg",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q67hg",
+      "studentName": "VANDRANKI LEELARANI",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.912Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6a49",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6a49",
+      "studentName": "LATCHIREDDY KOMALI",
+      "teamId": "team-h2sm",
+      "teamName": "Team 6",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.914Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6c4l",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6c4l",
+      "studentName": "KOMMOJU KUSUMA",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.916Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6ec1",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6ec1",
+      "studentName": "TATA SONY",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.919Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6h8j",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6h8j",
+      "studentName": "ANNE HARSHINI",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.921Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6jm0",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6jm0",
+      "studentName": "JONNALAGADDA TULASI CHOWDARY",
+      "teamId": "team-hevu",
+      "teamName": "Team 7",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.923Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6lpb",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6lpb",
+      "studentName": "GUVVALA NEHAREDDY",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.925Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6on1",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6on1",
+      "studentName": "DONGA SAASE SNEHAAWLL",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.928Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6qiz",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6qiz",
+      "studentName": "GUDURI RAJESH KUMAR",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.930Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6s6m",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6s6m",
+      "studentName": "CHALAMALA JNANESWAR PAVAN SAI",
+      "teamId": "team-hlpx",
+      "teamName": "Team 8",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.932Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6ujz",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6ujz",
+      "studentName": "NELAPUDI GOWTHAM",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.935Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q6xk1",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q6xk1",
+      "studentName": "GUDIVADA SAI KUMAR",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.938Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q70cg",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q70cg",
+      "studentName": "MANDANGI NIKHIL",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.940Z",
+      "method": "manual_admin"
+    },
+    {
+      "id": "att-stu-1q72j3",
+      "sessionId": "session-main",
+      "eventId": "summit-2027",
+      "studentId": "stu-1q72j3",
+      "studentName": "BELLAPU MOULI CHANDRIKA",
+      "teamId": "team-hsmf",
+      "teamName": "Team 9",
+      "status": "absent",
+      "verifiedBy": "system",
+      "verifiedAt": "2026-09-13T08:31:26.942Z",
+      "method": "manual_admin"
+    }
+  ],
+  "photos": [
+    {
+      "id": "PHOTO-ZQWN2",
+      "eventId": "summit-2027",
+      "uploadedBy": {
+        "userId": "stu-11a9",
+        "name": "ABHI",
+        "role": "student",
+        "teamId": "team-2b8c",
+        "teamName": "TEAM 2",
+        "mentorName": "Kavita Rao"
+      },
+      "originalUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789277540/summitconnect/1789277536025_orig_PHOTO-ZQWN2.png",
+      "brandedUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789277542/summitconnect/1789277540598_branded_PHOTO-ZQWN2.jpg",
+      "thumbnailUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789277542/summitconnect/1789277540598_branded_PHOTO-ZQWN2.jpg",
+      "verificationCode": "VERIFY_PHOTO-ZQWN2_V9L0Z",
+      "gps": {
+        "lat": 16.964715,
+        "lng": 82.217675,
+        "accuracy": 91,
+        "locationName": "Summit Venue"
+      },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "sizeBytes": 313470,
+      "mimeType": "image/jpeg",
+      "capturedAt": "2026-09-13T05:32:04.638Z",
+      "uploadedAt": "2026-09-13T05:32:21.608Z",
+      "status": "approved",
+      "tags": [
+        "summit2027",
+        "TEAM 2"
+      ]
+    },
+    {
+      "id": "PHOTO-4CYX4",
+      "eventId": "summit-2027",
+      "uploadedBy": {
+        "userId": "mentor-a49l",
+        "name": "RAM",
+        "role": "mentor"
+      },
+      "originalUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789224807/summitconnect/1789224803971_orig_PHOTO-4CYX4.jpg",
+      "brandedUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789224808/summitconnect/1789224807778_branded_PHOTO-4CYX4.jpg",
+      "thumbnailUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789224808/summitconnect/1789224807778_branded_PHOTO-4CYX4.jpg",
+      "verificationCode": "VERIFY_PHOTO-4CYX4_8MZVW",
+      "dimensions": {
+        "width": 2,
+        "height": 2
+      },
+      "sizeBytes": 781,
+      "mimeType": "image/jpeg",
+      "capturedAt": "2026-09-12T14:53:23.955Z",
+      "uploadedAt": "2026-09-12T14:53:29.071Z",
+      "status": "approved",
+      "tags": [
+        "summit2027",
+        "general"
+      ]
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann_mtzcx29m",
+      "eventId": "summit-2027",
+      "title": "Information About the Summit",
+      "message": "full Data",
+      "priority": "normal",
+      "target": {
+        "audience": "all"
+      },
+      "fileName": "Full information about Summit.pdf",
+      "fileUrl": "/uploads/1789276298728_Full_information_about_Summit.pdf",
+      "fileType": "pdf",
+      "senderId": "admin-root",
+      "senderName": "Summit Command Center",
+      "createdAt": "2026-09-13T05:11:51.994Z"
+    }
+  ],
+  "activityLogs": [
+    {
+      "id": "act_1789288286942",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q72j3",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "BELLAPU MOULI CHANDRIKA"
+      },
+      "timestamp": "2026-09-13T08:31:26.942Z"
+    },
+    {
+      "id": "act_1789288286940",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q70cg",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "MANDANGI NIKHIL"
+      },
+      "timestamp": "2026-09-13T08:31:26.940Z"
+    },
+    {
+      "id": "act_1789288286938",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6xk1",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "GUDIVADA SAI KUMAR"
+      },
+      "timestamp": "2026-09-13T08:31:26.938Z"
+    },
+    {
+      "id": "act_1789288286935",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6ujz",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "NELAPUDI GOWTHAM"
+      },
+      "timestamp": "2026-09-13T08:31:26.935Z"
+    },
+    {
+      "id": "act_1789288286932",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6s6m",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "CHALAMALA JNANESWAR PAVAN SAI"
+      },
+      "timestamp": "2026-09-13T08:31:26.932Z"
+    },
+    {
+      "id": "act_1789288286930",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6qiz",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "GUDURI RAJESH KUMAR"
+      },
+      "timestamp": "2026-09-13T08:31:26.930Z"
+    },
+    {
+      "id": "act_1789288286928",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6on1",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "DONGA SAASE SNEHAAWLL"
+      },
+      "timestamp": "2026-09-13T08:31:26.928Z"
+    },
+    {
+      "id": "act_1789288286925",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6lpb",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "GUVVALA NEHAREDDY"
+      },
+      "timestamp": "2026-09-13T08:31:26.925Z"
+    },
+    {
+      "id": "act_1789288286923",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6jm0",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "JONNALAGADDA TULASI CHOWDARY"
+      },
+      "timestamp": "2026-09-13T08:31:26.923Z"
+    },
+    {
+      "id": "act_1789288286921",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6h8j",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "ANNE HARSHINI"
+      },
+      "timestamp": "2026-09-13T08:31:26.921Z"
+    },
+    {
+      "id": "act_1789288286919",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6ec1",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "TATA SONY"
+      },
+      "timestamp": "2026-09-13T08:31:26.919Z"
+    },
+    {
+      "id": "act_1789288286916",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6c4l",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "KOMMOJU KUSUMA"
+      },
+      "timestamp": "2026-09-13T08:31:26.916Z"
+    },
+    {
+      "id": "act_1789288286914",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6a49",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "LATCHIREDDY KOMALI"
+      },
+      "timestamp": "2026-09-13T08:31:26.914Z"
+    },
+    {
+      "id": "act_1789288286912",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q67hg",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "VANDRANKI LEELARANI"
+      },
+      "timestamp": "2026-09-13T08:31:26.912Z"
+    },
+    {
+      "id": "act_1789288286909",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q65m1",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "SUNKARA HEMA SRI KAVYA"
+      },
+      "timestamp": "2026-09-13T08:31:26.909Z"
+    },
+    {
+      "id": "act_1789288286907",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q6340",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "SEERAM RAMADEVI"
+      },
+      "timestamp": "2026-09-13T08:31:26.907Z"
+    },
+    {
+      "id": "act_1789288286905",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q61kt",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "PULIDINDI MEGHANA SAISRI"
+      },
+      "timestamp": "2026-09-13T08:31:26.905Z"
+    },
+    {
+      "id": "act_1789288286903",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q5zc3",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "TATIKONDA HARSHITHA"
+      },
+      "timestamp": "2026-09-13T08:31:26.903Z"
+    },
+    {
+      "id": "act_1789288286899",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q5v7s",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "SYED RAFIYA"
+      },
+      "timestamp": "2026-09-13T08:31:26.899Z"
+    },
+    {
+      "id": "act_1789288286893",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q5pl5",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "TURUGOLI ABHINAY"
+      },
+      "timestamp": "2026-09-13T08:31:26.893Z"
+    },
+    {
+      "id": "act_1789288286887",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q5i4y",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "ACHANTA PRIYANKA"
+      },
+      "timestamp": "2026-09-13T08:31:26.887Z"
+    },
+    {
+      "id": "act_1789288286867",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4yq6",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "PALLA JAYANTHI"
+      },
+      "timestamp": "2026-09-13T08:31:26.867Z"
+    },
+    {
+      "id": "act_1789288286864",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4wbn",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "VADDI HARAVINDA"
+      },
+      "timestamp": "2026-09-13T08:31:26.864Z"
+    },
+    {
+      "id": "act_1789288286862",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4uqi",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "KAPPALA JEEVANA SAI"
+      },
+      "timestamp": "2026-09-13T08:31:26.862Z"
+    },
+    {
+      "id": "act_1789288286860",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4sd3",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "GUNDUPALLI SRI GOWRI AKHIL TEJA"
+      },
+      "timestamp": "2026-09-13T08:31:26.860Z"
+    },
+    {
+      "id": "act_1789288286858",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4p2y",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "KOLACHALA SAHASRAHASINI"
+      },
+      "timestamp": "2026-09-13T08:31:26.858Z"
+    },
+    {
+      "id": "act_1789288286854",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4mgx",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "NAYANA SOWMYA"
+      },
+      "timestamp": "2026-09-13T08:31:26.854Z"
+    },
+    {
+      "id": "act_1789288286852",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4ke7",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "AKULA VENKATA SRI DURGA"
+      },
+      "timestamp": "2026-09-13T08:31:26.852Z"
+    },
+    {
+      "id": "act_1789288286850",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4i1t",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "MORTHA AMRUTHA VARSHINI"
+      },
+      "timestamp": "2026-09-13T08:31:26.850Z"
+    },
+    {
+      "id": "act_1789288286847",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-1q4eqo",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "DEVARAPALLI JYOTHI MANIKANTA"
+      },
+      "timestamp": "2026-09-13T08:31:26.847Z"
+    },
+    {
+      "id": "act_1789288151302",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-ytja3b",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "GUDIVADA SAI KUMAR"
+      },
+      "timestamp": "2026-09-13T08:29:11.302Z"
+    },
+    {
+      "id": "act_1789287565463",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-m9hz4i",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "MORTHA AMRUTHA VARSHINI"
+      },
+      "timestamp": "2026-09-13T08:19:25.463Z"
+    },
+    {
+      "id": "act_1789287565461",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-m9hx14",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "DEVARAPALLI JYOTHI MANIKANTA"
+      },
+      "timestamp": "2026-09-13T08:19:25.461Z"
+    },
+    {
+      "id": "act_1789284404538",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Master Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "admin@summitconnect.org",
+        "role": "admin"
+      },
+      "timestamp": "2026-09-13T07:26:44.538Z"
+    },
+    {
+      "id": "act_1789276331113",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T05:12:11.113Z"
+    },
+    {
+      "id": "act_1789266334655",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T02:25:34.655Z"
+    },
+    {
+      "id": "act_1789266273803",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Master Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "admin@summitconnect.org",
+        "role": "admin"
+      },
+      "timestamp": "2026-09-13T02:24:33.803Z"
+    },
+    {
+      "id": "act_1789266187083",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T02:23:07.083Z"
+    },
+    {
+      "id": "act_1789229856692",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Master Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "admin@summitconnect.org",
+        "role": "admin"
+      },
+      "timestamp": "2026-09-12T16:17:36.692Z"
+    },
+    {
+      "id": "act_1789229721144",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-6gjc",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "Test Student Beta"
+      },
+      "timestamp": "2026-09-12T16:15:21.144Z"
+    },
+    {
+      "id": "act_1789229721140",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-6gj7",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "Test Student Alpha"
+      },
+      "timestamp": "2026-09-12T16:15:21.140Z"
+    },
+    {
+      "id": "act_1789229181272",
+      "eventId": "summit-2027",
+      "actorId": "tch-ab16",
+      "actorName": "SAtya",
+      "actorRole": "teacher",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "satya@gmail.com",
+        "role": "teacher"
+      },
+      "timestamp": "2026-09-12T16:06:21.272Z"
+    },
+    {
+      "id": "act_1789229175503",
+      "eventId": "summit-2027",
+      "actorId": "tch-ab16",
+      "actorName": "SAtya",
+      "actorRole": "teacher",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "satya@gmail.com",
+        "role": "teacher"
+      },
+      "timestamp": "2026-09-12T16:06:15.503Z"
+    },
+    {
+      "id": "act_1789229170369",
+      "eventId": "summit-2027",
+      "actorId": "tch-summit01",
+      "actorName": "Faculty Lead",
+      "actorRole": "teacher",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "teacher@summitconnect.org",
+        "role": "teacher"
+      },
+      "timestamp": "2026-09-12T16:06:10.369Z"
+    },
+    {
+      "id": "act_1789229164667",
+      "eventId": "summit-2027",
+      "actorId": "tch-ab16",
+      "actorName": "SAtya",
+      "actorRole": "teacher",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "satya@gmail.com",
+        "role": "teacher"
+      },
+      "timestamp": "2026-09-12T16:06:04.667Z"
+    },
+    {
+      "id": "act_1789224912933",
+      "eventId": "summit-2027",
+      "actorId": "tch-ab16",
+      "actorName": "SAtya",
+      "actorRole": "teacher",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "satya@gmail.com",
+        "role": "teacher"
+      },
+      "timestamp": "2026-09-12T14:55:12.933Z"
+    },
+    {
+      "id": "act_1789224903172",
+      "eventId": "summit-2027",
+      "actorId": "tch-ab16",
+      "actorName": "SAtya",
+      "actorRole": "teacher",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "satya@gmail.com",
+        "role": "teacher"
+      },
+      "timestamp": "2026-09-12T14:55:03.172Z"
+    },
+    {
+      "id": "act_1789224772039",
+      "eventId": "summit-2027",
+      "actorId": "mentor-a49l",
+      "actorName": "RAM",
+      "actorRole": "mentor",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "ram@gmail.com",
+        "role": "mentor"
+      },
+      "timestamp": "2026-09-12T14:52:52.039Z"
+    },
+    {
+      "id": "act_1789224464987",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T14:47:44.987Z"
+    },
+    {
+      "id": "act_1789220813392",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:46:53.392Z"
+    },
+    {
+      "id": "act_1789220552733",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:42:32.733Z"
+    },
+    {
+      "id": "act_1789220177917",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:36:17.917Z"
+    },
+    {
+      "id": "act_1789220152168",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:35:52.168Z"
+    },
+    {
+      "id": "act_1789219831266",
+      "eventId": "summit-2027",
+      "actorId": "mentor-a49l",
+      "actorName": "RAM",
+      "actorRole": "mentor",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "ram@gmail.com",
+        "role": "mentor"
+      },
+      "timestamp": "2026-09-12T13:30:31.266Z"
+    },
+    {
+      "id": "act_1789219667644",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:27:47.644Z"
+    },
+    {
+      "id": "act_1789219228160",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:20:28.161Z"
+    },
+    {
+      "id": "act_1789219156044",
+      "eventId": "summit-2027",
+      "actorId": "stu-vtnq",
+      "actorName": "Test Candidate",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "testcandidate@example.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:19:16.044Z"
+    },
+    {
+      "id": "act_1789219147238",
+      "eventId": "summit-2027",
+      "actorId": "admin",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_MODIFIED",
+      "targetEntity": "users/stu-vtnq",
+      "details": {
+        "action": "CREATED_STUDENT",
+        "name": "Test Candidate"
+      },
+      "timestamp": "2026-09-12T13:19:07.238Z"
+    },
+    {
+      "id": "act_1789219142059",
+      "eventId": "summit-2027",
+      "actorId": "stu-11a9",
+      "actorName": "ABHI",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-12T13:19:02.059Z"
+    },
+    {
+      "id": "act_1789217215296",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Master Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "admin@summitconnect.org",
+        "role": "admin"
+      },
+      "timestamp": "2026-09-12T12:46:55.296Z"
+    },
+    {
+      "id": "act_1789212787875",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Master Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "admin@summitconnect.org",
+        "role": "admin"
+      },
+      "timestamp": "2026-09-12T11:33:07.875Z"
+    },
+    {
+      "id": "act_1789212721985",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "system",
+      "details": {
+        "message": "Clean summit workspace initialized"
+      },
+      "timestamp": "2026-09-12T11:32:01.985Z"
+    }
+  ],
+  "scores": {}
+}
