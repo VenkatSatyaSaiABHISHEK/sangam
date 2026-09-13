@@ -695,8 +695,20 @@
       "eventId": "summit-2027",
       "name": "Team 1",
       "color": "#DB2777",
-      "mentorIds": [],
-      "mentors": [],
+      "mentorIds": [
+        "mentor-3mqe"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-3mqe",
+          "name": "Kondapalli Raja Rajeswari Devi Deepa",
+          "phone": "9052630638",
+          "email": "kondapallideepa9@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "4th Year"
+        }
+      ],
       "supportMentorIds": [
         "mentor-arjun01"
       ],
@@ -725,8 +737,20 @@
       "eventId": "summit-2027",
       "name": "Team 2",
       "color": "#2563EB",
-      "mentorIds": [],
-      "mentors": [],
+      "mentorIds": [
+        "mentor-35a2"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-35a2",
+          "name": "lithika sraya c",
+          "phone": "8122600858",
+          "email": "lithikasrayac@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "4th Year"
+        }
+      ],
       "supportMentorIds": [
         "mentor-arjun01"
       ],
@@ -755,8 +779,30 @@
       "eventId": "summit-2027",
       "name": "Team 3",
       "color": "#059669",
-      "mentorIds": [],
-      "mentors": [],
+      "mentorIds": [
+        "mentor-yelm",
+        "mentor-2poj"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-yelm",
+          "name": "BORA VEERA PRASANNA KOUSHIK",
+          "phone": "9059116060",
+          "email": "koushikbora2006@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        },
+        {
+          "id": "mentor-2poj",
+          "name": "K.pavani",
+          "phone": "6301286224",
+          "email": "pavanikulla1245@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "4th Year"
+        }
+      ],
       "studentIds": [
         "stu-1q4uqi",
         "stu-1q4wbn",
@@ -771,8 +817,20 @@
       "eventId": "summit-2027",
       "name": "Team 4",
       "color": "#0D9488",
-      "mentorIds": [],
-      "mentors": [],
+      "mentorIds": [
+        "mentor-1ydw"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-1ydw",
+          "name": "S.Hemavathi",
+          "phone": "9392521026",
+          "email": "saidhuhema11@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        }
+      ],
       "studentIds": [
         "stu-1q5i4y",
         "stu-1q5pl5",
@@ -788,24 +846,24 @@
       "name": "Team 5",
       "color": "#D97706",
       "mentorIds": [
-        "mentor-ztbt",
-        "mentor-x4z0"
+        "mentor-x4z0",
+        "mentor-ztbt"
       ],
       "mentors": [
-        {
-          "id": "mentor-ztbt",
-          "name": "KUDIPUDI SUPPRIYA",
-          "phone": "7013146069",
-          "email": "suppriya@gmail.com",
-          "club": "Smart City Lab",
-          "branch": "CSE",
-          "year": "3th Year"
-        },
         {
           "id": "mentor-x4z0",
           "name": "BOBBILI VAMSI",
           "phone": "8897552884",
           "email": "vickyvamsi634@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        },
+        {
+          "id": "mentor-ztbt",
+          "name": "KUDIPUDI SUPPRIYA",
+          "phone": "7013146069",
+          "email": "suppriya@gmail.com",
           "club": "Smart City Lab",
           "branch": "CSE",
           "year": "3th Year"
@@ -825,8 +883,20 @@
       "eventId": "summit-2027",
       "name": "Team 6",
       "color": "#059669",
-      "mentorIds": [],
-      "mentors": [],
+      "mentorIds": [
+        "mentor-4tfp"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-4tfp",
+          "name": "PECHETTI SRI RAMA CHANDRA MURTHI",
+          "phone": "8886295990",
+          "email": "murthy@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "4th Year"
+        }
+      ],
       "studentIds": [
         "stu-1q65m1",
         "stu-1q67hg",
@@ -909,8 +979,30 @@
       "eventId": "summit-2027",
       "name": "Team 9",
       "color": "#2563EB",
-      "mentorIds": [],
-      "mentors": [],
+      "mentorIds": [
+        "mentor-w6u9",
+        "mentor-5o10"
+      ],
+      "mentors": [
+        {
+          "id": "mentor-w6u9",
+          "name": "VENKAT NALLA",
+          "phone": "9603980767",
+          "email": "venkatnalla.official@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "3th Year"
+        },
+        {
+          "id": "mentor-5o10",
+          "name": "Abhishek",
+          "phone": "6302015687",
+          "email": "abhi31mahi@gmail.com",
+          "club": "Smart City Lab",
+          "branch": "CSE",
+          "year": "4th Year"
+        }
+      ],
       "studentIds": [
         "stu-1q6ujz",
         "stu-1q6xk1",

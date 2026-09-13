@@ -503,11 +503,11 @@ export default function LivePage() {
                 {filteredTeams.map((team) => {
                   const teamMentors = mentors.filter(
                     (m) =>
+                      m.teamId === team.id ||
                       team.mentorIds?.includes(m.id) ||
                       team.supportMentorIds?.includes(m.id) ||
                       team.mentors?.some((tm) => tm.id === m.id) ||
-                      team.supportMentors?.some((tm) => tm.id === m.id) ||
-                      (m.teamId === team.id && (!team.mentorIds?.length || team.mentorIds.includes(m.id)))
+                      team.supportMentors?.some((tm) => tm.id === m.id)
                   );
                   const teamStudents = students.filter(
                     (s) => s.teamId === team.id || team.studentIds?.includes(s.id)
@@ -1108,6 +1108,7 @@ export default function LivePage() {
                   {mentors
                     .filter(
                       (m) =>
+                        m.teamId === selectedTeam.id ||
                         selectedTeam.mentorIds?.includes(m.id) ||
                         selectedTeam.supportMentorIds?.includes(m.id) ||
                         selectedTeam.mentors?.some((tm) => tm.id === m.id) ||
