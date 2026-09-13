@@ -137,21 +137,33 @@ export async function POST(req: NextRequest) {
     switch (action) {
       case 'createStudent': {
         const student = db.createStudent(payload);
-        saveUserToFirestore(student).catch((e) => console.warn('Firestore sync student:', e));
+        try {
+          await saveUserToFirestore(student);
+        } catch (e) {
+          console.warn('Firestore sync student:', e);
+        }
         return NextResponse.json({ success: true, student });
       }
 
       case 'bulkCreateStudents': {
         const result = db.bulkCreateStudents(payload.students || []);
         const allToSync = [...result.created, ...result.updated];
-        Promise.all(allToSync.map((u) => saveUserToFirestore(u))).catch((e) =>
-          console.warn('Firestore bulk sync error:', e)
-        );
+        try {
+          await Promise.all(allToSync.map((u) => saveUserToFirestore(u)));
+        } catch (e) {
+          console.warn('Firestore bulk sync error:', e);
+        }
         const touchedTeamIds = Array.from(new Set(allToSync.map((u) => u.teamId).filter(Boolean) as string[]));
-        touchedTeamIds.forEach((tId) => {
-          const t = db.getTeamById(tId);
-          if (t) saveTeamToFirestore(t).catch((e) => console.warn('Firestore team sync error:', e));
-        });
+        try {
+          await Promise.all(
+            touchedTeamIds.map((tId) => {
+              const t = db.getTeamById(tId);
+              return t ? saveTeamToFirestore(t) : Promise.resolve(false);
+            })
+          );
+        } catch (e) {
+          console.warn('Firestore team sync error:', e);
+        }
         return NextResponse.json({
           success: true,
           count: result.created.length + result.updated.length,
@@ -165,36 +177,53 @@ export async function POST(req: NextRequest) {
       case 'updateStudent': {
         const student = db.updateStudent(payload.id, payload.updates);
         if (student) {
-          saveUserToFirestore(student).catch((e) => console.warn('Firestore sync student update:', e));
+          try {
+            await saveUserToFirestore(student);
+          } catch (e) {
+            console.warn('Firestore sync student update:', e);
+          }
         }
         return NextResponse.json({ success: true, student });
       }
 
       case 'deleteStudent': {
         const ok = db.deleteStudent(payload.id);
-        deleteUserFromFirestore(payload.id).catch((e) => console.warn('Firestore delete student:', e));
+        try {
+          await deleteUserFromFirestore(payload.id);
+        } catch (e) {
+          console.warn('Firestore delete student:', e);
+        }
         return NextResponse.json({ success: ok });
       }
 
       case 'createTeam': {
         const team = db.createTeam(payload);
-        saveTeamToFirestore(team).catch((e) => console.warn('Firestore sync team:', e));
+        try {
+          await saveTeamToFirestore(team);
+        } catch (e) {
+          console.warn('Firestore sync team:', e);
+        }
         return NextResponse.json({ success: true, team });
       }
 
       case 'updateTeam': {
         const team = db.updateTeam(payload.id, payload.updates);
         if (team) {
-          saveTeamToFirestore(team).catch((e) => console.warn('Firestore sync team update:', e));
-          // Sync affected users
-          (team.mentorIds || []).forEach((mId) => {
-            const u = db.getUserById(mId);
-            if (u) saveUserToFirestore(u).catch((e) => console.warn('Firestore sync user:', e));
-          });
-          (team.studentIds || []).forEach((sId) => {
-            const u = db.getUserById(sId);
-            if (u) saveUserToFirestore(u).catch((e) => console.warn('Firestore sync user:', e));
-          });
+          try {
+            await saveTeamToFirestore(team);
+            const userPromises: Promise<any>[] = [];
+            (team.mentorIds || []).forEach((mId) => {
+              const u = db.getUserById(mId);
+              if (u) userPromises.push(saveUserToFirestore(u));
+            });
+            (team.studentIds || []).forEach((sId) => {
+              const u = db.getUserById(sId);
+              if (u) userPromises.push(saveUserToFirestore(u));
+            });
+            await Promise.all(userPromises);
+          } catch (e) {
+            console.warn('Firestore sync team update:', e);
+          }
         }
         return NextResponse.json({ success: !!team, team });
       }
@@ -206,9 +235,13 @@ export async function POST(req: NextRequest) {
         if (team && student) {
           const studentIds = Array.from(new Set([...team.studentIds, studentId]));
           const updatedTeam = db.updateTeam(teamId, { studentIds });
-          if (updatedTeam) saveTeamToFirestore(updatedTeam).catch((e) => console.warn('Firestore sync team:', e));
           const updatedStudent = db.getUserById(studentId);
-          if (updatedStudent) saveUserToFirestore(updatedStudent).catch((e) => console.warn('Firestore sync student:', e));
+          try {
+            if (updatedTeam) await saveTeamToFirestore(updatedTeam);
+            if (updatedStudent) await saveUserToFirestore(updatedStudent);
+          } catch (e) {
+            console.warn('Firestore sync assign student error:', e);
+          }
           return NextResponse.json({ success: true, team: updatedTeam, student: updatedStudent });
         }
         return NextResponse.json({ error: 'Team or student not found' }, { status: 404 });
@@ -220,9 +253,13 @@ export async function POST(req: NextRequest) {
         if (team) {
           const studentIds = team.studentIds.filter((id) => id !== studentId);
           const updatedTeam = db.updateTeam(teamId, { studentIds });
-          if (updatedTeam) saveTeamToFirestore(updatedTeam).catch((e) => console.warn('Firestore sync team:', e));
           const updatedStudent = db.getUserById(studentId);
-          if (updatedStudent) saveUserToFirestore(updatedStudent).catch((e) => console.warn('Firestore sync student:', e));
+          try {
+            if (updatedTeam) await saveTeamToFirestore(updatedTeam);
+            if (updatedStudent) await saveUserToFirestore(updatedStudent);
+          } catch (e) {
+            console.warn('Firestore sync remove student error:', e);
+          }
           return NextResponse.json({ success: true, team: updatedTeam });
         }
         return NextResponse.json({ error: 'Team not found' }, { status: 404 });
@@ -232,8 +269,14 @@ export async function POST(req: NextRequest) {
         const { teamId, mentorId } = payload;
         const res = db.assignMentorToTeam(teamId, mentorId);
         if (res) {
-          saveTeamToFirestore(res.team).catch((e) => console.warn('Firestore sync team:', e));
-          saveUserToFirestore(res.mentor).catch((e) => console.warn('Firestore sync mentor:', e));
+          try {
+            await Promise.all([
+              saveTeamToFirestore(res.team),
+              saveUserToFirestore(res.mentor),
+            ]);
+          } catch (e) {
+            console.warn('Firestore sync mentor assign:', e);
+          }
           return NextResponse.json({ success: true, team: res.team, mentor: res.mentor });
         }
         return NextResponse.json({ error: 'Team or mentor not found' }, { status: 404 });
@@ -243,8 +286,12 @@ export async function POST(req: NextRequest) {
         const { teamId, mentorId } = payload;
         const res = db.removeMentorFromTeam(teamId, mentorId);
         if (res) {
-          saveTeamToFirestore(res.team).catch((e) => console.warn('Firestore sync team:', e));
-          if (res.mentor?.id) saveUserToFirestore(res.mentor).catch((e) => console.warn('Firestore sync mentor:', e));
+          try {
+            await saveTeamToFirestore(res.team);
+            if (res.mentor?.id) await saveUserToFirestore(res.mentor);
+          } catch (e) {
+            console.warn('Firestore sync mentor remove:', e);
+          }
           return NextResponse.json({ success: true, team: res.team, mentor: res.mentor });
         }
         return NextResponse.json({ error: 'Team not found' }, { status: 404 });
@@ -252,51 +299,78 @@ export async function POST(req: NextRequest) {
 
       case 'deleteTeam': {
         const ok = db.deleteTeam(payload.id);
-        deleteTeamFromFirestore(payload.id).catch((e) => console.warn('Firestore delete team:', e));
+        try {
+          await deleteTeamFromFirestore(payload.id);
+        } catch (e) {
+          console.warn('Firestore delete team:', e);
+        }
         return NextResponse.json({ success: ok });
       }
 
       case 'createMentor': {
         const mentor = db.createMentor(payload);
-        saveUserToFirestore(mentor).catch((e) => console.warn('Firestore sync mentor:', e));
+        try {
+          await saveUserToFirestore(mentor);
+        } catch (e) {
+          console.warn('Firestore sync mentor:', e);
+        }
         return NextResponse.json({ success: true, mentor });
       }
 
       case 'updateMentor': {
         const mentor = db.updateMentor(payload.id, payload.updates);
         if (mentor) {
-          saveUserToFirestore(mentor).catch((e) => console.warn('Firestore sync mentor update:', e));
-          // Sync teams to ensure unassigned/assigned mentors are reflected in Firestore
-          db.getTeams().forEach((team) => {
-            saveTeamToFirestore(team).catch((e) => console.warn('Firestore sync team update:', e));
-          });
+          try {
+            await saveUserToFirestore(mentor);
+            await Promise.all(
+              db.getTeams().map((team) => saveTeamToFirestore(team))
+            );
+          } catch (e) {
+            console.warn('Firestore sync mentor update:', e);
+          }
         }
         return NextResponse.json({ success: true, mentor });
       }
 
       case 'deleteMentor': {
         const ok = db.deleteMentor(payload.id);
-        deleteUserFromFirestore(payload.id).catch((e) => console.warn('Firestore delete mentor:', e));
+        try {
+          await deleteUserFromFirestore(payload.id);
+        } catch (e) {
+          console.warn('Firestore delete mentor:', e);
+        }
         return NextResponse.json({ success: ok });
       }
 
       case 'createTeacher': {
         const teacher = db.createTeacher(payload);
-        saveUserToFirestore(teacher).catch((e) => console.warn('Firestore sync teacher:', e));
+        try {
+          await saveUserToFirestore(teacher);
+        } catch (e) {
+          console.warn('Firestore sync teacher:', e);
+        }
         return NextResponse.json({ success: true, teacher });
       }
 
       case 'updateTeacher': {
         const teacher = db.updateTeacher(payload.id, payload.updates);
         if (teacher) {
-          saveUserToFirestore(teacher).catch((e) => console.warn('Firestore sync teacher update:', e));
+          try {
+            await saveUserToFirestore(teacher);
+          } catch (e) {
+            console.warn('Firestore sync teacher update:', e);
+          }
         }
         return NextResponse.json({ success: true, teacher });
       }
 
       case 'deleteTeacher': {
         const ok = db.deleteTeacher(payload.id);
-        deleteUserFromFirestore(payload.id).catch((e) => console.warn('Firestore delete teacher:', e));
+        try {
+          await deleteUserFromFirestore(payload.id);
+        } catch (e) {
+          console.warn('Firestore delete teacher:', e);
+        }
         return NextResponse.json({ success: ok });
       }
 

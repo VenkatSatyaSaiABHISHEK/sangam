@@ -149,6 +149,13 @@ export default function AdminStudentsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create student');
 
+      if (data.student) {
+        try {
+          const { saveUserToFirestore } = await import('@/lib/firebase-db');
+          saveUserToFirestore(data.student).catch(() => {});
+        } catch {}
+      }
+
       showToast('Student Registered', `${newName} saved to summit database & Firebase.`, 'success');
       setIsAddModalOpen(false);
       setNewName('');
@@ -203,6 +210,13 @@ export default function AdminStudentsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update student');
 
+      if (data.student) {
+        try {
+          const { saveUserToFirestore } = await import('@/lib/firebase-db');
+          saveUserToFirestore(data.student).catch(() => {});
+        } catch {}
+      }
+
       showToast('Student Updated', `${editName} updated successfully.`, 'success');
       setEditingStudent(null);
       loadData();
@@ -213,6 +227,11 @@ export default function AdminStudentsPage() {
 
   const handleDelete = async (student: User) => {
     if (confirm(`Are you sure you want to delete ${student.fullName}?`)) {
+      try {
+        const { deleteUserFromFirestore } = await import('@/lib/firebase-db');
+        deleteUserFromFirestore(student.id).catch(() => {});
+      } catch {}
+
       try {
         const res = await fetch('/api/data', {
           method: 'POST',

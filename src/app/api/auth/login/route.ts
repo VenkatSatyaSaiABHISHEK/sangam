@@ -27,8 +27,9 @@ export async function POST(req: NextRequest) {
     const targetRole = (body.targetRole || '').trim().toLowerCase();
     const cleanDigits = email.replace(/\D/g, '');
 
-    const findMatchingParticipants = (): User[] => {
-      return db.getUsers().filter(
+    const findMatchingParticipants = async (): Promise<User[]> => {
+      // 1. In-memory participant check
+      const localMatches = db.getUsers().filter(
         (u) =>
           u.role !== 'admin' &&
           ((u.email && u.email.toLowerCase() === email) ||
@@ -36,6 +37,25 @@ export async function POST(req: NextRequest) {
               u.phone &&
               u.phone.replace(/\D/g, '').slice(-10) === cleanDigits.slice(-10)))
       );
+      if (localMatches.length > 0) return localMatches;
+
+      // 2. Live Firestore participant check
+      try {
+        const { fetchUsersFromFirestore } = await import('@/lib/firebase-db');
+        const firestoreUsers = await fetchUsersFromFirestore();
+        return firestoreUsers.filter((u) => {
+          if (u.role === 'admin') return false;
+          if (u.email && u.email.toLowerCase() === email) return true;
+          if (cleanDigits.length >= 7 && u.phone) {
+            const uDigits = u.phone.replace(/\D/g, '');
+            if (uDigits.slice(-10) === cleanDigits.slice(-10)) return true;
+          }
+          return false;
+        });
+      } catch (e) {
+        console.warn('Firestore fallback lookup in findMatchingParticipants:', e);
+        return [];
+      }
     };
 
     // Action: check available roles for this email
@@ -56,31 +76,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      let participants = findMatchingParticipants();
-
-      if (participants.length === 0) {
-        try {
-          const { fetchUsersFromFirestore } = await import('@/lib/firebase-db');
-          const firestoreUsers = await fetchUsersFromFirestore();
-          const match = firestoreUsers.find((u) => {
-            if (u.role === 'admin') return false;
-            if (u.email?.toLowerCase() === email) return true;
-            if (cleanDigits.length >= 7 && u.phone) {
-              const uDigits = u.phone.replace(/\D/g, '');
-              if (uDigits.slice(-10) === cleanDigits.slice(-10)) return true;
-            }
-            return false;
-          });
-          if (match) {
-            if (match.role === 'student') db.createStudent(match);
-            else if (match.role === 'mentor') db.createMentor(match);
-            else if (match.role === 'teacher') db.createTeacher(match);
-            participants = findMatchingParticipants();
-          }
-        } catch (e) {
-          console.warn('Firestore fallback lookup in checkRoles:', e);
-        }
-      }
+      const participants = await findMatchingParticipants();
 
       for (const p of participants) {
         const roleLabel =
@@ -107,31 +103,7 @@ export async function POST(req: NextRequest) {
     let authenticatedUser: User | null = null;
 
     // Check matching participants
-    let matchingParticipants = findMatchingParticipants();
-
-    if (matchingParticipants.length === 0 && !isMasterAdmin) {
-      try {
-        const { fetchUsersFromFirestore } = await import('@/lib/firebase-db');
-        const firestoreUsers = await fetchUsersFromFirestore();
-        const match = firestoreUsers.find((u) => {
-          if (u.role === 'admin') return false;
-          if (u.email?.toLowerCase() === email) return true;
-          if (cleanDigits.length >= 7 && u.phone) {
-            const uDigits = u.phone.replace(/\D/g, '');
-            if (uDigits.slice(-10) === cleanDigits.slice(-10)) return true;
-          }
-          return false;
-        });
-        if (match) {
-          if (match.role === 'student') db.createStudent(match);
-          else if (match.role === 'mentor') db.createMentor(match);
-          else if (match.role === 'teacher') db.createTeacher(match);
-          matchingParticipants = findMatchingParticipants();
-        }
-      } catch (e) {
-        console.warn('Firestore fallback lookup in login:', e);
-      }
-    }
+    let matchingParticipants = await findMatchingParticipants();
 
     // If email belongs to both admin and a participant (e.g. mentor Abhishek), prompt role selection if not chosen yet
     if (!targetRole && isMasterAdmin && matchingParticipants.length > 0) {
@@ -207,6 +179,25 @@ export async function POST(req: NextRequest) {
 
       if (!foundUser) {
         foundUser = matchingParticipants[0] || db.getUserByEmailOrPhone(email);
+      }
+
+      // Final fallback directly querying all Firestore users
+      if (!foundUser) {
+        try {
+          const { fetchUsersFromFirestore } = await import('@/lib/firebase-db');
+          const firestoreUsers = await fetchUsersFromFirestore();
+          foundUser = firestoreUsers.find((u) => {
+            if (u.role === 'admin') return false;
+            if (u.email && u.email.toLowerCase() === email) return true;
+            if (cleanDigits.length >= 7 && u.phone) {
+              const uDigits = u.phone.replace(/\D/g, '');
+              if (uDigits.slice(-10) === cleanDigits.slice(-10)) return true;
+            }
+            return false;
+          });
+        } catch (e) {
+          console.warn('Final fallback Firestore lookup error:', e);
+        }
       }
 
       if (!foundUser) {
