@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/toast';
 import { db } from '@/lib/db';
 import { generateRoomCode } from '@/lib/utils';
+import { saveRoomToFirestore } from '@/lib/firebase-db';
+import { getCachedData, setCachedData } from '@/lib/data-cache';
 import {
   Plus,
   Trash2,
@@ -85,7 +87,7 @@ export function RoomBuilder() {
     );
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       showToast('Room Name Required', 'Please enter a name for this session.', 'error');
@@ -111,6 +113,25 @@ export function RoomBuilder() {
     };
 
     db.saveRoom(newRoom);
+    const cached = getCachedData();
+    setCachedData({ ...cached, rooms: [newRoom, ...(cached?.rooms || []).filter((r: Room) => r.id !== newRoom.id)] });
+
+    try {
+      await saveRoomToFirestore(newRoom);
+    } catch (err) {
+      console.warn('Firestore room sync error:', err);
+    }
+
+    try {
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'createRoom', payload: newRoom }),
+      });
+    } catch (err) {
+      console.warn('API createRoom error:', err);
+    }
+
     setCreatedRoom(newRoom);
     showToast('Room Created!', `Shareable code: ${roomCode}`, 'success');
   };

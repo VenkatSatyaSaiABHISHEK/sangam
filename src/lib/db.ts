@@ -1246,6 +1246,16 @@ class PersistentDatabase {
     return false;
   }
 
+  deleteRoom(id: string): boolean {
+    const prevLen = this.data.rooms.length;
+    this.data.rooms = this.data.rooms.filter((r) => r.id !== id);
+    if (this.data.rooms.length !== prevLen) {
+      this.saveToFile();
+      return true;
+    }
+    return false;
+  }
+
   submitToRoom(submission: RoomSubmission): RoomSubmission {
     this.data.submissions.unshift(submission);
     const room = this.getRoomById(submission.roomId);

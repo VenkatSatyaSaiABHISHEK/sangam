@@ -9,6 +9,9 @@ import {
   deleteBusFromFirestore,
   saveAnnouncementToFirestore,
   saveAttendanceToFirestore,
+  saveRoomToFirestore,
+  deleteRoomFromFirestore,
+  fetchRoomsFromFirestore,
 } from '@/lib/firebase-db';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +22,17 @@ export async function GET(req: NextRequest) {
     db.reload();
     const url = new URL(req.url);
     const includeParam = url.searchParams.get('include');
+
+    let allRooms = db.getRooms();
+    try {
+      const fsRooms = await fetchRoomsFromFirestore();
+      if (fsRooms && fsRooms.length > 0) {
+        const map = new Map<string, any>();
+        allRooms.forEach((r) => map.set(r.id, r));
+        fsRooms.forEach((r) => map.set(r.id, { ...map.get(r.id), ...r }));
+        allRooms = Array.from(map.values());
+      }
+    } catch {}
 
     if (includeParam) {
       const fields = new Set(includeParam.split(',').map((f) => f.trim().toLowerCase()));
@@ -33,7 +47,7 @@ export async function GET(req: NextRequest) {
       if (fields.has('teams')) partialData.teams = db.getTeams();
       if (fields.has('buses')) partialData.buses = db.getBuses();
       if (fields.has('announcements')) partialData.announcements = db.getAnnouncements();
-      if (fields.has('rooms')) partialData.rooms = db.getRooms();
+      if (fields.has('rooms')) partialData.rooms = allRooms;
       if (fields.has('attendance')) partialData.attendance = db.getAttendance();
 
       return NextResponse.json(partialData, {
@@ -54,7 +68,7 @@ export async function GET(req: NextRequest) {
         teams: db.getTeams(),
         buses: db.getBuses(),
         announcements: db.getAnnouncements(),
-        rooms: db.getRooms(),
+        rooms: allRooms,
         attendance: db.getAttendance(),
         photos: db.getPhotos(),
         activities: db.getActivityLogs(50),
@@ -275,6 +289,30 @@ export async function POST(req: NextRequest) {
         const record = db.markAttendance(studentId, status || 'present', verifiedBy || 'room_submission');
         saveAttendanceToFirestore(record).catch((e) => console.warn('Firestore sync attendance:', e));
         return NextResponse.json({ success: true, record });
+      }
+
+      case 'createRoom':
+      case 'saveRoom': {
+        const room = db.saveRoom(payload);
+        saveRoomToFirestore(room).catch((e) => console.warn('Firestore sync room:', e));
+        return NextResponse.json({ success: true, room });
+      }
+
+      case 'deleteRoom': {
+        const ok = db.deleteRoom(payload.id);
+        deleteRoomFromFirestore(payload.id).catch((e) => console.warn('Firestore delete room:', e));
+        return NextResponse.json({ success: ok });
+      }
+
+      case 'submitToRoom': {
+        const sub = db.submitToRoom(payload);
+        const updatedRoom = db.getRoomById(payload.roomId);
+        if (updatedRoom) {
+          saveRoomToFirestore(updatedRoom).catch((e) =>
+            console.warn('Firestore sync room submission count:', e)
+          );
+        }
+        return NextResponse.json({ success: true, submission: sub });
       }
 
       default:

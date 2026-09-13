@@ -292,3 +292,14 @@ export async function fetchRoomByIdFromFirestore(roomId: string): Promise<Room |
     return null;
   }
 }
+
+export async function deleteRoomFromFirestore(roomId: string): Promise<boolean> {
+  if (!isFirestoreReady() || !dbFirestore) return false;
+  try {
+    await deleteDoc(doc(dbFirestore, ROOMS_COL, roomId));
+    return true;
+  } catch (err: any) {
+    console.error(`[Firestore Error] Failed to delete room ${roomId}:`, err.message || err);
+    return false;
+  }
+}

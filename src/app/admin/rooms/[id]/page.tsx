@@ -31,16 +31,52 @@ export default function AdminRoomDetailPage() {
   const [room, setRoom] = useState<Room | null>(null);
   const [submissions, setSubmissions] = useState<RoomSubmission[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (roomId) {
-      const found = db.getRoomById(roomId);
-      if (found) {
-        setRoom(found);
-        setSubmissions(db.getSubmissions(roomId));
+    const loadRoom = async () => {
+      if (!roomId) return;
+      try {
+        let found = db.getRoomById(roomId);
+
+        if (!found) {
+          const res = await fetch('/api/data');
+          if (res.ok) {
+            const data = await res.json();
+            found = (data.rooms || []).find((r: Room) => r.id.toLowerCase() === roomId.toLowerCase());
+          }
+        }
+
+        if (!found) {
+          try {
+            const { fetchRoomByIdFromFirestore } = await import('@/lib/firebase-db');
+            const fsRoom = await fetchRoomByIdFromFirestore(roomId);
+            if (fsRoom) found = fsRoom;
+          } catch {}
+        }
+
+        if (found) {
+          setRoom(found);
+          setSubmissions(db.getSubmissions(roomId));
+        }
+      } catch (err) {
+        console.warn('Error loading room inspect:', err);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    loadRoom();
   }, [roomId]);
+
+  if (loading) {
+    return (
+      <div className="p-12 text-center space-y-3">
+        <div className="w-8 h-8 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-neutral-500 font-mono">Loading room details...</p>
+      </div>
+    );
+  }
 
   if (!room) {
     return (

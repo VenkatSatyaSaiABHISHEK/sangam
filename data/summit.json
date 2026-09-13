@@ -923,7 +923,31 @@
     }
   ],
   "buses": [],
-  "rooms": [],
+  "rooms": [
+    {
+      "id": "test-room-99",
+      "eventId": "sangam-2027",
+      "title": "Test Innovation Session",
+      "purpose": "Verify dynamic room creation and persistence",
+      "category": "attendance",
+      "fields": [
+        {
+          "id": "f1",
+          "type": "text",
+          "label": "Student Name",
+          "required": true
+        }
+      ],
+      "allowedRoles": [
+        "all"
+      ],
+      "oneSubmissionPerUser": true,
+      "submissionCount": 0,
+      "isActive": true,
+      "createdAt": "2026-09-13T11:14:18.682Z",
+      "createdBy": "admin-01"
+    }
+  ],
   "submissions": [],
   "attendance": [
     {

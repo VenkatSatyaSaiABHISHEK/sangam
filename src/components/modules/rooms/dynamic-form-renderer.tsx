@@ -178,6 +178,16 @@ export function DynamicFormRenderer({ room, onSuccess }: DynamicFormRendererProp
     };
 
     db.submitToRoom(submission);
+    try {
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'submitToRoom', payload: submission }),
+      });
+    } catch (err) {
+      console.warn('API submitToRoom error:', err);
+    }
+
     setLoading(false);
     setSubmitted(true);
     showToast('Submission Recorded', 'Your response and attendance have been saved.', 'success');
