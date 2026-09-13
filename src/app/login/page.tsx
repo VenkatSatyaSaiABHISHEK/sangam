@@ -127,19 +127,20 @@ function LoginForm() {
 
     if (res.success && res.role) {
       showToast('Authentication Verified', `Welcome! Entering your ${res.role} portal...`, 'success');
-      if (callbackUrl) {
-        router.push(callbackUrl);
-      } else if (res.role === 'student') {
-        router.push('/student');
-      } else if (res.role === 'mentor') {
-        router.push('/mentor/dashboard');
-      } else if (res.role === 'teacher') {
-        router.push('/teacher/dashboard');
-      } else if (res.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/');
+
+      let targetPath = '/';
+      if (res.role === 'student') targetPath = '/student';
+      else if (res.role === 'mentor') targetPath = '/mentor/dashboard';
+      else if (res.role === 'teacher') targetPath = '/teacher/dashboard';
+      else if (res.role === 'admin') targetPath = '/admin/dashboard';
+
+      if (callbackUrl && !callbackUrl.includes('/login')) {
+        targetPath = callbackUrl;
       }
+
+      // Perform full browser transition so HTTP-only session cookies are guaranteed to be committed
+      window.location.href = targetPath;
+      return;
     } else if (res.requireRoleSelection && res.roles) {
       setAvailableRoles(res.roles);
       setSelectedRole(res.roles[0].role);

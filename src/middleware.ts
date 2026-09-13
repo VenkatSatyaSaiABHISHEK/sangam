@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+function decodeSessionPayload(token: string): any {
+  try {
+    const [payloadStr] = token.split('.');
+    if (!payloadStr) return null;
+
+    if (typeof Buffer !== 'undefined') {
+      try {
+        return JSON.parse(Buffer.from(payloadStr, 'base64url').toString('utf8'));
+      } catch {}
+    }
+
+    try {
+      const base64 = payloadStr.replace(/-/g, '+').replace(/_/g, '/');
+      const pad = base64.length % 4;
+      const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+      const decoded = atob(padded);
+      return JSON.parse(decoded);
+    } catch {}
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -40,26 +65,19 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Parse session token payload
-  try {
-    const [payloadStr] = sessionCookie.split('.');
-    if (!payloadStr) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-    const payload = JSON.parse(
-      Buffer.from(payloadStr, 'base64url').toString('utf8')
-    );
+  // Parse session token payload safely
+  const payload = decodeSessionPayload(sessionCookie);
 
-    if (!payload || payload.exp < Date.now()) {
-      const res = NextResponse.redirect(new URL('/login', req.url));
-      res.cookies.delete('sangam_session');
-      res.cookies.delete('sangam_user_role');
-      res.cookies.delete('summit_session');
-      res.cookies.delete('summit_user_role');
-      return res;
-    }
+  if (!payload || payload.exp < Date.now()) {
+    const res = NextResponse.redirect(new URL('/login', req.url));
+    res.cookies.delete('sangam_session');
+    res.cookies.delete('sangam_user_role');
+    res.cookies.delete('summit_session');
+    res.cookies.delete('summit_user_role');
+    return res;
+  }
 
-    const userRole = payload.role;
+  const userRole = payload.role;
 
     // Helper to get role home portal
     const getRoleHome = (role: string): string => {
@@ -101,11 +119,8 @@ export function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL(getRoleHome(userRole), req.url));
       }
     }
-  } catch {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
 
-  return NextResponse.next();
+    return NextResponse.next();
 }
 
 export const config = {
