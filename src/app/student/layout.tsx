@@ -11,8 +11,8 @@ export default function StudentLayout({
 }) {
   const pathname = usePathname();
 
-  // Do not render student bottom nav on the login page
-  if (pathname === '/student/login' || pathname === '/login') {
+  // Do not render student bottom nav or constraining padding on login or channel page
+  if (pathname === '/student/login' || pathname === '/login' || pathname === '/student/channel') {
     return <>{children}</>;
   }
 

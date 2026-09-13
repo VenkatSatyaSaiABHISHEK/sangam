@@ -294,9 +294,9 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] max-w-2xl mx-auto bg-neutral-100 text-neutral-900 overflow-hidden font-sans border-x border-neutral-300 shadow-2xl relative">
+    <div className="flex flex-col h-[100dvh] w-full max-w-2xl mx-auto bg-neutral-100 text-neutral-900 overflow-hidden font-sans border-x border-neutral-300 shadow-2xl relative">
       {/* 1. TOP HEADER (Sleek Monochrome / Black & White) */}
-      <header className="sticky top-0 z-30 bg-neutral-950 text-white px-4 py-3 flex items-center justify-between shadow-md select-none">
+      <header className="shrink-0 bg-neutral-950 text-white px-4 py-3 flex items-center justify-between shadow-md select-none z-30">
         <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
@@ -369,7 +369,7 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
       </header>
 
       {/* 2. CHAT STREAM (Monochrome / Black & White WhatsApp-style layout) */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f8f9fa] relative">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 bg-[#f8f9fa] relative">
         {/* Topic Banner */}
         <div className="text-center my-2">
           <span className="inline-block px-3 py-1 bg-white border border-neutral-200/90 rounded-full text-[11px] text-neutral-600 font-medium shadow-xs">
@@ -478,7 +478,7 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
 
       {/* 3. ATTACHMENT PREVIEW (if image selected) */}
       {imagePreview && (
-        <div className="px-4 py-2 bg-neutral-200 border-t border-neutral-300 flex items-center justify-between">
+        <div className="shrink-0 px-4 py-2 bg-neutral-200 border-t border-neutral-300 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
               src={imagePreview}
@@ -501,7 +501,7 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
 
       {/* 4. READ-ONLY BANNER FOR STUDENTS (When toggled off) */}
       {!settings.studentCanPost && !isMentorOrFaculty && (
-        <div className="bg-neutral-200 border-t border-neutral-300 p-3 text-center text-xs text-neutral-700 flex items-center justify-center gap-2">
+        <div className="shrink-0 bg-neutral-200 border-t border-neutral-300 p-3 text-center text-xs text-neutral-700 flex items-center justify-center gap-2">
           <Lock className="w-4 h-4 text-neutral-600" />
           <span>Broadcast Mode: Only Mentors and Faculty can post. Students can read updates.</span>
         </div>
@@ -511,7 +511,7 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
       {(settings.studentCanPost || isMentorOrFaculty) && (
         <form
           onSubmit={handleSendMessage}
-          className="sticky bottom-0 z-20 bg-white border-t border-neutral-300 p-3 flex items-center gap-2 shadow-lg"
+          className="shrink-0 sticky bottom-0 z-20 bg-white border-t border-neutral-300 p-3 flex items-center gap-2 shadow-lg"
         >
           {/* Hidden File Input */}
           <input
