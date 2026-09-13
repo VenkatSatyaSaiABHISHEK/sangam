@@ -22,7 +22,9 @@ import {
   Image as GalleryIcon,
   Sparkles,
   ArrowRight,
+  Smartphone,
 } from 'lucide-react';
+import { InstallAppModal } from '@/components/pwa/install-app-modal';
 
 export default function StudentHomePage() {
   const { user } = useAuth();
@@ -33,7 +35,14 @@ export default function StudentHomePage() {
   const [myPhotoCount, setMyPhotoCount] = useState<number>(0);
   const [totalPhotoCount, setTotalPhotoCount] = useState<number>(0);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('install=')) {
+      setInstallModalOpen(true);
+    }
+  }, []);
 
   const handleDirectPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -150,6 +159,25 @@ export default function StudentHomePage() {
             Unassigned
           </Badge>
         )}
+      </div>
+
+      {/* App Install & Push Notification Banner */}
+      <div className="p-3 bg-neutral-900 text-white rounded-xl flex items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+            <Smartphone className="w-4 h-4 text-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold truncate">Download / Install Sangam App</p>
+            <p className="text-[10px] text-neutral-400 truncate">Push notifications &amp; native screen experience</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setInstallModalOpen(true)}
+          className="px-3 py-1.5 rounded-lg bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-colors shrink-0 shadow-2xs"
+        >
+          Install App
+        </button>
       </div>
 
       {/* Classical High-End Quick Status Strip */}
@@ -388,6 +416,11 @@ export default function StudentHomePage() {
           </Link>
         </div>
       </div>
+
+      <InstallAppModal
+        isOpen={installModalOpen}
+        onClose={() => setInstallModalOpen(false)}
+      />
     </div>
   );
 }

@@ -7,7 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/toast';
-import { Mail, Lock, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, AlertCircle, Smartphone } from 'lucide-react';
+import { InstallAppModal } from '@/components/pwa/install-app-modal';
 
 function LoginForm() {
   const router = useRouter();
@@ -29,6 +30,7 @@ function LoginForm() {
     requiresPassword?: boolean;
   }>>([]);
   const [selectedRole, setSelectedRole] = useState<string>('admin');
+  const [installModalOpen, setInstallModalOpen] = useState(false);
 
   const isAdminEmail = (val: string) => {
     const lower = val.trim().toLowerCase();
@@ -289,6 +291,22 @@ function LoginForm() {
           </Button>
         </form>
       </Card>
+
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={() => setInstallModalOpen(true)}
+          className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-900 transition-colors cursor-pointer"
+        >
+          <Smartphone className="w-3.5 h-3.5" />
+          <span>Install Mobile App / Download APK</span>
+        </button>
+      </div>
+
+      <InstallAppModal
+        isOpen={installModalOpen}
+        onClose={() => setInstallModalOpen(false)}
+      />
     </div>
   );
 }

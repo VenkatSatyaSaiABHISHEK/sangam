@@ -21,6 +21,7 @@ import {
   Loader2,
   ChevronDown,
 } from 'lucide-react';
+import { sendDevicePushNotification } from '@/lib/push-notifications';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 
@@ -175,6 +176,14 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
             setTimeout(() => scrollToBottom('smooth'), 50);
           } else {
             playMessageSound();
+            if (typeof document !== 'undefined' && document.hidden) {
+              sendDevicePushNotification({
+                title: `💬 ${latest.senderName || 'Channel Message'}`,
+                body: latest.content || (latest.imageUrl ? '📷 Shared an image' : 'New message in channel'),
+                url: '/student/channels',
+                tag: `msg-${latest.id}`,
+              });
+            }
             if (isAtBottomRef.current) {
               setTimeout(() => scrollToBottom('smooth'), 50);
             } else {
