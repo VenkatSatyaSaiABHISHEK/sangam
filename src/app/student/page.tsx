@@ -8,6 +8,7 @@ import { Announcement, Room, AttendanceRecord, Team } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Bell,
   FileText,
@@ -151,28 +152,40 @@ export default function StudentHomePage() {
         )}
       </div>
 
-      {/* Sangam Open Channel Card (WhatsApp-Style Group Discussion) */}
-      <Link href="/student/channel" className="block">
-        <div className="p-3.5 rounded-2xl bg-neutral-950 text-white border border-neutral-900 hover:bg-neutral-900 active:scale-[0.99] transition-all flex items-center justify-between shadow-md cursor-pointer group">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white text-neutral-950 flex items-center justify-center font-black group-hover:scale-105 transition-transform shadow-sm">
-              <MessageCircle className="w-5 h-5 text-neutral-950" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-bold text-white uppercase tracking-wide">
-                  Sangam Open Channel
-                </h2>
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              </div>
-              <p className="text-[11px] text-neutral-400">
-                Live discussion with mentors, faculty & student cohorts
-              </p>
-            </div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-white transition-colors" />
+      {/* Classical High-End Quick Status Strip */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="p-2.5 rounded-xl bg-white border border-neutral-200/80 shadow-2xs text-center">
+          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
+            Attendance
+          </span>
+          <span
+            className={cn(
+              'text-xs font-bold inline-block mt-0.5',
+              isPresent ? 'text-emerald-600' : 'text-neutral-700'
+            )}
+          >
+            {isPresent ? '✓ Marked' : 'Pending'}
+          </span>
         </div>
-      </Link>
+
+        <div className="p-2.5 rounded-xl bg-white border border-neutral-200/80 shadow-2xs text-center">
+          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
+            Documents
+          </span>
+          <span className="text-xs font-bold text-neutral-900 inline-block mt-0.5">
+            {announcements.length} Available
+          </span>
+        </div>
+
+        <div className="p-2.5 rounded-xl bg-white border border-neutral-200/80 shadow-2xs text-center">
+          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
+            My Photos
+          </span>
+          <span className="text-xs font-bold text-neutral-900 inline-block mt-0.5">
+            {myPhotoCount} Shared
+          </span>
+        </div>
+      </div>
 
       {/* Live Action Requests / Dynamic Rooms */}
       {activeRooms.length > 0 && (

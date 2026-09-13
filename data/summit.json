@@ -942,13 +942,26 @@
         "all"
       ],
       "oneSubmissionPerUser": true,
-      "submissionCount": 0,
+      "submissionCount": 1,
       "isActive": true,
       "createdAt": "2026-09-13T11:14:18.682Z",
       "createdBy": "admin-01"
     }
   ],
-  "submissions": [],
+  "submissions": [
+    {
+      "id": "sub_mtzvcivi",
+      "roomId": "test-room-99",
+      "eventId": "sangam-2027",
+      "submittedBy": {
+        "fullName": "Participant"
+      },
+      "answers": {
+        "f1": "ABHI"
+      },
+      "submittedAt": "2026-09-13T13:47:46.446Z"
+    }
+  ],
   "attendance": [
     {
       "id": "att-stu-1q4eqo",
@@ -1423,6 +1436,132 @@
     }
   ],
   "activityLogs": [
+    {
+      "id": "act_1789308534336",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T14:08:54.336Z"
+    },
+    {
+      "id": "act_1789308524001",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T14:08:44.001Z"
+    },
+    {
+      "id": "act_1789307916621",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:58:36.621Z"
+    },
+    {
+      "id": "act_1789307895706",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:58:15.706Z"
+    },
+    {
+      "id": "act_1789307222447",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:47:02.447Z"
+    },
+    {
+      "id": "act_1789307195714",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:46:35.714Z"
+    },
+    {
+      "id": "act_1789307156840",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:45:56.840Z"
+    },
+    {
+      "id": "act_1789307145842",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:45:45.842Z"
+    },
+    {
+      "id": "act_1789306441292",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-13T13:34:01.292Z"
+    },
     {
       "id": "act_1789296925493",
       "eventId": "summit-2027",

@@ -101,6 +101,17 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/teacher/dashboard', req.url));
     }
 
+    // Open Channel is accessible to all authenticated summit users (students, mentors, faculty, admins)
+    if (
+      pathname === '/student/channel' ||
+      pathname.startsWith('/student/channel') ||
+      pathname === '/mentor/channel' ||
+      pathname.startsWith('/mentor/channel') ||
+      pathname === '/channel'
+    ) {
+      return NextResponse.next();
+    }
+
     // Strict Role Enforcement
     if (pathname.startsWith('/admin')) {
       if (userRole !== 'admin') {

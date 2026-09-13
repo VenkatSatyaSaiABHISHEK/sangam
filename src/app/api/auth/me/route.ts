@@ -11,12 +11,7 @@ export async function GET(req: NextRequest) {
 
     const user = getVerifiedUserFromSession(sessionCookie.value);
     if (!user) {
-      const response = NextResponse.json({ user: null }, { status: 200 });
-      response.cookies.delete('sangam_session');
-      response.cookies.delete('sangam_user_role');
-      response.cookies.delete('summit_session');
-      response.cookies.delete('summit_user_role');
-      return response;
+      return NextResponse.json({ user: null }, { status: 200 });
     }
 
     return NextResponse.json({ user, role: user.role });
