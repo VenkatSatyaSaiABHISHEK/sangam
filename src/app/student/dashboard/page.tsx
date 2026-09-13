@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Camera,
+  MessageCircle,
   Users,
   Bus,
   GraduationCap,
@@ -104,19 +104,22 @@ export default function StudentDashboardPage() {
         </div>
       </Card>
 
-      {/* Primary Action Button: Large CAMERA CTA */}
-      <Link href="/student/camera" className="block">
+      {/* Primary Action Button: Large Open Channel CTA */}
+      <Link href="/student/channel" className="block">
         <button className="w-full py-3.5 px-4 rounded-xl bg-black text-white hover:bg-neutral-800 active:scale-98 transition-all flex items-center justify-between shadow-sm cursor-pointer border border-black">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-neutral-800 flex items-center justify-center">
-              <Camera className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-lg bg-white text-neutral-950 flex items-center justify-center font-bold">
+              <MessageCircle className="w-5 h-5 text-neutral-950" />
             </div>
             <div className="text-left">
-              <p className="text-xs font-bold uppercase tracking-wider text-white">
-                Snap Sangam Photo
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-white">
+                  Sangam Open Channel
+                </p>
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              </div>
               <p className="text-[11px] text-neutral-400">
-                Auto-stamps verified QR code & metadata
+                Live WhatsApp-style discussion with mentors & faculty
               </p>
             </div>
           </div>

@@ -273,7 +273,7 @@ export function GalleryGrid({ initialPhotos, teamIdFilter }: GalleryGridProps) {
             <span className="hidden xs:inline">Top Shares</span>
           </button>
 
-          {/* Direct WhatsApp-Style Multi-Upload Button */}
+          {/* Direct Multi-Upload Button */}
           <Button
             size="sm"
             onClick={() => fileInputRef.current?.click()}
@@ -282,18 +282,6 @@ export function GalleryGrid({ initialPhotos, teamIdFilter }: GalleryGridProps) {
             <Upload className="w-3.5 h-3.5" />
             <span>Upload Photos</span>
           </Button>
-
-          {/* Camera Link */}
-          <Link href={cameraPath}>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700 text-xs gap-1.5 cursor-pointer"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Camera</span>
-            </Button>
-          </Link>
         </div>
       </div>
 

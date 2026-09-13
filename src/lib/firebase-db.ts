@@ -8,9 +8,11 @@ import {
   query,
   where,
   orderBy,
+  onSnapshot,
+  limit,
 } from 'firebase/firestore';
 import { dbFirestore } from './firebase';
-import { Team, User, Bus, Room, Announcement, Photo, AttendanceRecord } from '@/types';
+import { Team, User, Bus, Room, Announcement, Photo, AttendanceRecord, ChannelMessage, ChannelSettings } from '@/types';
 
 // Collections
 const TEAMS_COL = 'teams';
@@ -20,6 +22,9 @@ const ROOMS_COL = 'rooms';
 const ANNOUNCEMENTS_COL = 'announcements';
 const PHOTOS_COL = 'photos';
 const ATTENDANCE_COL = 'attendance';
+const MESSAGES_COL = 'channel_messages';
+const SETTINGS_COL = 'settings';
+const CHANNEL_SETTINGS_DOC = 'channel_settings';
 
 // Helper to check if Firestore is ready
 function isFirestoreReady(): boolean {
@@ -309,3 +314,97 @@ export async function deleteRoomFromFirestore(roomId: string): Promise<boolean> 
     return false;
   }
 }
+
+// ----------------- OPEN CHANNEL (WhatsApp-style Group Discussion) -----------------
+export async function saveChannelMessage(message: ChannelMessage): Promise<boolean> {
+  if (!isFirestoreReady() || !dbFirestore) return false;
+  try {
+    const docRef = doc(dbFirestore, MESSAGES_COL, message.id);
+    const data = sanitizeForFirestore({
+      ...message,
+      createdAt: message.createdAt || new Date().toISOString(),
+    });
+    await setDoc(docRef, data, { merge: true });
+    return true;
+  } catch (err: any) {
+    console.error(`[Firestore Error] Failed to save channel message ${message.id}:`, err.message || err);
+    return false;
+  }
+}
+
+export async function fetchChannelMessages(): Promise<ChannelMessage[]> {
+  if (!isFirestoreReady() || !dbFirestore) return [];
+  try {
+    const colRef = collection(dbFirestore, MESSAGES_COL);
+    const q = query(colRef, limit(300));
+    const snap = await getDocs(q);
+    const messages: ChannelMessage[] = [];
+    snap.forEach((d) => messages.push(d.data() as ChannelMessage));
+    return messages.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  } catch (err: any) {
+    console.warn(`[Firestore Error] Could not fetch channel messages:`, err.message || err);
+    return [];
+  }
+}
+
+export function subscribeToChannelMessages(
+  callback: (messages: ChannelMessage[]) => void
+): () => void {
+  if (!isFirestoreReady() || !dbFirestore) {
+    return () => {};
+  }
+  try {
+    const colRef = collection(dbFirestore, MESSAGES_COL);
+    const q = query(colRef, limit(300));
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
+        const messages: ChannelMessage[] = [];
+        snap.forEach((d) => messages.push(d.data() as ChannelMessage));
+        messages.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        callback(messages);
+      },
+      (err) => {
+        console.warn('[Firestore] Channel snapshot subscription error:', err);
+      }
+    );
+    return unsubscribe;
+  } catch (err) {
+    console.warn('[Firestore] Error creating channel listener:', err);
+    return () => {};
+  }
+}
+
+export async function saveChannelSettings(settings: ChannelSettings): Promise<boolean> {
+  if (!isFirestoreReady() || !dbFirestore) return false;
+  try {
+    const docRef = doc(dbFirestore, SETTINGS_COL, CHANNEL_SETTINGS_DOC);
+    await setDoc(
+      docRef,
+      sanitizeForFirestore({ ...settings, updatedAt: new Date().toISOString() }),
+      { merge: true }
+    );
+    return true;
+  } catch (err: any) {
+    console.error(`[Firestore Error] Failed to save channel settings:`, err.message || err);
+    return false;
+  }
+}
+
+export async function fetchChannelSettings(): Promise<ChannelSettings> {
+  if (!isFirestoreReady() || !dbFirestore) return { studentCanPost: true };
+  try {
+    const snap = await getDoc(doc(dbFirestore, SETTINGS_COL, CHANNEL_SETTINGS_DOC));
+    if (snap.exists()) {
+      return snap.data() as ChannelSettings;
+    }
+  } catch (err: any) {
+    console.warn(`[Firestore Error] Could not fetch channel settings:`, err.message || err);
+  }
+  return { studentCanPost: true };
+}
+

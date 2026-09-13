@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Users,
-  Camera,
+  MessageCircle,
   CalendarCheck,
   Image as GalleryIcon,
   Bell,
@@ -62,10 +62,10 @@ export default function MentorDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href="/mentor/camera">
-            <Button size="sm" className="gap-1.5 text-xs">
-              <Camera className="w-3.5 h-3.5" />
-              <span>Team Camera</span>
+          <Link href="/mentor/channel">
+            <Button size="sm" className="gap-1.5 text-xs bg-neutral-950 text-white hover:bg-neutral-800">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Open Channel</span>
             </Button>
           </Link>
           <Link href="/mentor/attendance">
@@ -79,11 +79,11 @@ export default function MentorDashboardPage() {
 
       {/* Quick Action Cards (Section 19) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link href="/mentor/camera">
-          <Card className="p-4 hover:border-neutral-400 transition-colors space-y-1">
-            <Camera className="w-5 h-5 text-neutral-800" />
-            <p className="text-xs font-bold text-neutral-950">Camera</p>
-            <p className="text-[10px] text-neutral-500">Take stamped photos</p>
+        <Link href="/mentor/channel">
+          <Card className="p-4 hover:border-neutral-950 transition-colors space-y-1 bg-neutral-950 text-white border-neutral-950">
+            <MessageCircle className="w-5 h-5 text-white" />
+            <p className="text-xs font-bold text-white">Open Channel</p>
+            <p className="text-[10px] text-neutral-400">Discussion & Q&A</p>
           </Card>
         </Link>
 

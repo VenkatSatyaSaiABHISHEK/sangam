@@ -14,7 +14,9 @@ import {
   ExternalLink,
   Download,
   CalendarCheck,
-  Camera,
+  MessageCircle,
+  UploadCloud,
+  Loader2,
   Users,
   Image as GalleryIcon,
   Sparkles,
@@ -29,6 +31,40 @@ export default function StudentHomePage() {
   const [myTeam, setMyTeam] = useState<Team | null>(null);
   const [myPhotoCount, setMyPhotoCount] = useState<number>(0);
   const [totalPhotoCount, setTotalPhotoCount] = useState<number>(0);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleDirectPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append(
+        'metadata',
+        JSON.stringify({
+          eventId: 'sangam-2027',
+          uploadedBy: {
+            userId: user?.id || 'anonymous',
+            name: user?.fullName || 'Student',
+            role: 'student',
+            teamName: user?.teamName,
+          },
+        })
+      );
+      const res = await fetch('/api/photos/upload', { method: 'POST', body: formData });
+      if (res.ok) {
+        setMyPhotoCount((c) => c + 1);
+        setTotalPhotoCount((c) => c + 1);
+      }
+    } catch {
+      // Graceful fallback
+    } finally {
+      setIsUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -115,23 +151,26 @@ export default function StudentHomePage() {
         )}
       </div>
 
-      {/* Quick Snap Shutter Card */}
-      <Link href="/student/camera" className="block">
-        <div className="p-3.5 rounded-2xl bg-white border border-neutral-200 hover:border-neutral-400 active:scale-[0.99] transition-all flex items-center justify-between shadow-2xs cursor-pointer group">
+      {/* Sangam Open Channel Card (WhatsApp-Style Group Discussion) */}
+      <Link href="/student/channel" className="block">
+        <div className="p-3.5 rounded-2xl bg-neutral-950 text-white border border-neutral-900 hover:bg-neutral-900 active:scale-[0.99] transition-all flex items-center justify-between shadow-md cursor-pointer group">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Camera className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-white text-neutral-950 flex items-center justify-center font-black group-hover:scale-105 transition-transform shadow-sm">
+              <MessageCircle className="w-5 h-5 text-neutral-950" />
             </div>
             <div>
-              <h2 className="text-xs font-bold text-neutral-950 uppercase tracking-wide">
-                Snap Sangam Photo
-              </h2>
-              <p className="text-[11px] text-neutral-500">
-                Camera captures verified photo with scannable QR proof
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-bold text-white uppercase tracking-wide">
+                  Sangam Open Channel
+                </h2>
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              </div>
+              <p className="text-[11px] text-neutral-400">
+                Live discussion with mentors, faculty & student cohorts
               </p>
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-950 transition-colors" />
+          <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-white transition-colors" />
         </div>
       </Link>
 
@@ -274,30 +313,67 @@ export default function StudentHomePage() {
         )}
       </div>
 
-      {/* Quick Navigation Footer Links */}
-      <div className="grid grid-cols-2 gap-2 pt-1">
-        <Link href="/student/team" className="block">
-          <Card className="p-3 hover:border-neutral-400 transition-colors space-y-1">
-            <Users className="w-4 h-4 text-neutral-700" />
-            <p className="text-xs font-bold text-neutral-900">My Team Roster</p>
-            <p className="text-[10px] text-neutral-500">Contact mentors & teammates</p>
-          </Card>
-        </Link>
+      {/* Lower Section: Direct Photo Upload & Navigation */}
+      <div className="pt-2 space-y-2">
+        <input
+          type="file"
+          ref={photoInputRef}
+          onChange={handleDirectPhotoUpload}
+          accept="image/*"
+          className="hidden"
+        />
 
-        <Link href="/student/gallery" className="block">
-          <Card className="p-3 hover:border-neutral-400 transition-colors space-y-1 relative">
-            <div className="flex items-center justify-between">
-              <GalleryIcon className="w-4 h-4 text-neutral-700" />
-              <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                {myPhotoCount} shared
-              </span>
+        {/* Direct Photo Upload Card (Replaces Camera in lower part) */}
+        <div
+          onClick={() => photoInputRef.current?.click()}
+          className="p-3.5 rounded-2xl bg-white border border-neutral-200 hover:border-neutral-950 active:scale-[0.99] transition-all flex items-center justify-between cursor-pointer shadow-xs group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center group-hover:bg-neutral-950 group-hover:text-white transition-colors">
+              {isUploadingPhoto ? (
+                <Loader2 className="w-5 h-5 animate-spin text-neutral-900 group-hover:text-white" />
+              ) : (
+                <UploadCloud className="w-5 h-5 text-neutral-800 group-hover:text-white" />
+              )}
             </div>
-            <p className="text-xs font-bold text-neutral-900">Sangam Memories</p>
-            <p className="text-[10px] text-neutral-500">
-              {totalPhotoCount > 0 ? `${totalPhotoCount} photos in gallery` : 'View shared photos'}
-            </p>
-          </Card>
-        </Link>
+            <div>
+              <h3 className="text-xs font-bold text-neutral-950">
+                {isUploadingPhoto ? 'Uploading to Gallery...' : 'Upload Photos to Gallery'}
+              </h3>
+              <p className="text-[11px] text-neutral-500">
+                Share team photos & project images directly
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold px-2.5 py-1 bg-neutral-100 group-hover:bg-neutral-950 group-hover:text-white rounded-lg text-neutral-800 transition-colors border border-neutral-200">
+            Upload
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Link href="/student/team" className="block">
+            <Card className="p-3 hover:border-neutral-400 transition-colors space-y-1">
+              <Users className="w-4 h-4 text-neutral-700" />
+              <p className="text-xs font-bold text-neutral-900">My Team Roster</p>
+              <p className="text-[10px] text-neutral-500">Contact mentors & teammates</p>
+            </Card>
+          </Link>
+
+          <Link href="/student/gallery" className="block">
+            <Card className="p-3 hover:border-neutral-400 transition-colors space-y-1 relative">
+              <div className="flex items-center justify-between">
+                <GalleryIcon className="w-4 h-4 text-neutral-700" />
+                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-900 border border-neutral-200">
+                  {myPhotoCount} shared
+                </span>
+              </div>
+              <p className="text-xs font-bold text-neutral-900">Sangam Memories</p>
+              <p className="text-[10px] text-neutral-500">
+                {totalPhotoCount > 0 ? `${totalPhotoCount} photos in gallery` : 'View shared photos'}
+              </p>
+            </Card>
+          </Link>
+        </div>
       </div>
     </div>
   );

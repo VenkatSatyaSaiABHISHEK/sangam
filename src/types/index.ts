@@ -282,3 +282,29 @@ export interface EventInfo {
     totalBuses: number;
   };
 }
+
+export interface ChannelMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  senderEmail?: string;
+  senderAvatar?: string;
+  teamName?: string;
+  content: string;
+  imageUrl?: string;
+  imageCaption?: string;
+  isQuestion?: boolean;
+  replyTo?: {
+    id: string;
+    senderName: string;
+    content: string;
+  };
+  createdAt: string;
+}
+
+export interface ChannelSettings {
+  studentCanPost: boolean;
+  topic?: string;
+  updatedAt?: string;
+}
