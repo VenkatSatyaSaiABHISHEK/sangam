@@ -15,12 +15,16 @@ export default function AdminLoginPage() {
   const { login } = useAuth();
   const { showToast } = useToast();
 
-  const [email, setEmail] = useState('admin@summitconnect.org');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) {
+      showToast('Email Required', 'Please enter your administrator email.', 'error');
+      return;
+    }
     if (!password) {
       showToast('Password Required', 'Please enter your master admin password.', 'error');
       return;
@@ -78,7 +82,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@sangamconnect.org"
+                placeholder="abhi31mahi@gmail.com or admin@sangamconnect.org"
                 className="pl-9 text-xs"
               />
             </div>

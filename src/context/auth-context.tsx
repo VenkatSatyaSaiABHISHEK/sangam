@@ -7,7 +7,10 @@ interface AuthContextType {
   user: User | null;
   role: UserRole | null;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<{ success: boolean; message?: string; role?: UserRole }>;
+  login: (
+    email: string,
+    password?: string
+  ) => Promise<{ success: boolean; message?: string; role?: UserRole; requirePassword?: boolean }>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -41,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (
     email: string,
     password?: string
-  ): Promise<{ success: boolean; message?: string; role?: UserRole }> => {
+  ): Promise<{ success: boolean; message?: string; role?: UserRole; requirePassword?: boolean }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -52,7 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const data = await res.json();
       if (!res.ok) {
-        return { success: false, message: data.error || 'Authentication failed.' };
+        return {
+          success: false,
+          message: data.error || 'Authentication failed.',
+          requirePassword: data.requirePassword,
+        };
       }
 
       setUser(data.user);

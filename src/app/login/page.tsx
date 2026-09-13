@@ -22,10 +22,19 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const isAdminEmail = (val: string) => {
+    const lower = val.trim().toLowerCase();
+    return (
+      lower === 'abhi31mahi@gmail.com' ||
+      lower === 'admin@sangamconnect.org' ||
+      lower === 'admin@summitconnect.org' ||
+      lower.includes('admin')
+    );
+  };
+
   const handleEmailChange = (val: string) => {
     setEmail(val);
-    const lower = val.trim().toLowerCase();
-    if (lower === 'admin@sangamconnect.org' || lower === 'admin@summitconnect.org') {
+    if (isAdminEmail(val)) {
       setShowPassword(true);
     }
   };
@@ -34,6 +43,12 @@ function LoginForm() {
     e.preventDefault();
     if (!email.trim()) {
       showToast('Input Required', 'Please enter your registered Sangam email address.', 'error');
+      return;
+    }
+
+    if (isAdminEmail(email) && !password.trim()) {
+      setShowPassword(true);
+      showToast('Password Required', 'Administrative accounts require a master password.', 'error');
       return;
     }
 
@@ -57,9 +72,9 @@ function LoginForm() {
         router.push('/');
       }
     } else {
-      if (email.toLowerCase().includes('admin') && !showPassword) {
+      if (res.requirePassword || isAdminEmail(email)) {
         setShowPassword(true);
-        showToast('Password Required', 'Administrative accounts require a master password.', 'info');
+        showToast('Password Required', res.message || 'Administrative accounts require a master password.', 'error');
       } else {
         showToast('Account Not Found', res.message || 'No registered participant found with this email.', 'error');
       }

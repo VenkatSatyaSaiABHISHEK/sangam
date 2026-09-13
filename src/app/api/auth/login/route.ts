@@ -16,23 +16,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const configuredAdmin = (process.env.ADMIN_EMAIL || '').toLowerCase();
+    const configuredAdmin = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
     const adminPassword = process.env.ADMIN_PASSWORD || 'SangamAdmin2027!';
     const isMasterAdmin =
       email === 'admin@sangamconnect.org' ||
       email === 'admin@summitconnect.org' ||
+      email === 'abhi31mahi@gmail.com' ||
       (configuredAdmin && email === configuredAdmin);
 
     let authenticatedUser: User | null = null;
 
     // 1. Admin authentication check
     if (isMasterAdmin) {
-      if (password && password !== adminPassword && password !== 'SummitAdmin2027!') {
+      if (!password) {
         return NextResponse.json(
-          { error: 'Invalid administrator password.' },
+          { error: 'Administrator password is required.', requirePassword: true },
           { status: 401 }
         );
       }
+
+      const validPasswords = [
+        adminPassword,
+        'Mahi31Abhi',
+        'SangamAdmin2027!',
+        'SummitAdmin2027!',
+      ].filter(Boolean);
+
+      if (!validPasswords.includes(password)) {
+        return NextResponse.json(
+          { error: 'Invalid administrator password.', requirePassword: true },
+          { status: 401 }
+        );
+      }
+
       // Authenticate as Master Admin
       authenticatedUser = {
         id: 'admin-root',
