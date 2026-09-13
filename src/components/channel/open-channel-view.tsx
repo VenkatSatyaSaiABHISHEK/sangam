@@ -16,7 +16,6 @@ import {
   CheckCheck,
   HelpCircle,
   Lock,
-  Unlock,
   X,
   Download,
   Loader2,
@@ -73,7 +72,6 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [activeLightboxImg, setActiveLightboxImg] = useState<string | null>(null);
-  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
 
   // Scroll stability tracking (Prevents jumping)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -217,33 +215,6 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Toggle student permissions (Mentors & Admins only)
-  const handleTogglePermissions = async () => {
-    if (!isMentorOrFaculty) return;
-    setIsUpdatingSettings(true);
-    const updated = { ...settings, studentCanPost: !settings.studentCanPost };
-    setSettings(updated);
-    try {
-      await saveChannelSettings(updated);
-      await fetch('/api/channel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'updateSettings', settings: updated }),
-      });
-      showToast(
-        'Channel Settings Updated',
-        updated.studentCanPost
-          ? 'Discussion Open: Allowed students can now send messages.'
-          : 'Broadcast Mode: Only Mentors and Faculty can post.',
-        'info'
-      );
-    } catch {
-      showToast('Error', 'Failed to update channel settings.', 'error');
-    } finally {
-      setIsUpdatingSettings(false);
-    }
-  };
-
   // Dispatch message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,60 +308,7 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 w-full bg-white relative overflow-hidden select-none">
-      {/* 1. SLIM & COMPACT HEADER (Space Efficient) */}
-      <header className="shrink-0 px-3.5 py-2 bg-white border-b border-neutral-200 flex items-center justify-between z-20 shadow-2xs">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-neutral-950 text-white flex items-center justify-center font-bold text-[10px] shadow-xs shrink-0">
-            SC
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-xs font-bold text-neutral-950 uppercase tracking-wide truncate">
-                Sangam Channel
-              </h1>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" title="Live" />
-            </div>
-            <p className="text-[10px] text-neutral-500 leading-none truncate">
-              Mentors & Students
-            </p>
-          </div>
-        </div>
-
-        {/* Right side: Mode Status */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {isMentorOrFaculty && (
-            <button
-              onClick={handleTogglePermissions}
-              disabled={isUpdatingSettings}
-              className={cn(
-                'flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors cursor-pointer',
-                settings.studentCanPost
-                  ? 'bg-neutral-950 text-white border-neutral-950'
-                  : 'bg-neutral-100 text-neutral-700 border-neutral-200 hover:bg-neutral-200'
-              )}
-              title="Toggle broadcast mode"
-            >
-              {settings.studentCanPost ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-              <span>{settings.studentCanPost ? 'Open' : 'Broadcast'}</span>
-            </button>
-          )}
-
-          {!isMentorOrFaculty && (
-            <span
-              className={cn(
-                'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                allowedToPost
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : 'bg-neutral-100 text-neutral-500 border-neutral-200'
-              )}
-            >
-              {allowedToPost ? 'Can Chat' : 'View Only'}
-            </span>
-          )}
-        </div>
-      </header>
-
-      {/* 2. CHAT STREAM (Compact Bubbles, Senders on Left, Mine on Right, No Bulky Date Pill) */}
+      {/* 1. CHAT STREAM (Compact Bubbles, Senders on Left, Mine on Right) */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
