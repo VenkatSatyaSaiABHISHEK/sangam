@@ -9,8 +9,16 @@ interface AuthContextType {
   isLoading: boolean;
   login: (
     email: string,
-    password?: string
-  ) => Promise<{ success: boolean; message?: string; role?: UserRole; requirePassword?: boolean }>;
+    password?: string,
+    targetRole?: string
+  ) => Promise<{
+    success: boolean;
+    message?: string;
+    role?: UserRole;
+    requirePassword?: boolean;
+    requireRoleSelection?: boolean;
+    roles?: Array<{ role: string; label: string; name?: string; requiresPassword?: boolean }>;
+  }>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -43,14 +51,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (
     email: string,
-    password?: string
-  ): Promise<{ success: boolean; message?: string; role?: UserRole; requirePassword?: boolean }> => {
+    password?: string,
+    targetRole?: string
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    role?: UserRole;
+    requirePassword?: boolean;
+    requireRoleSelection?: boolean;
+    roles?: Array<{ role: string; label: string; name?: string; requiresPassword?: boolean }>;
+  }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, targetRole }),
       });
 
       const data = await res.json();
@@ -59,6 +75,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           success: false,
           message: data.error || 'Authentication failed.',
           requirePassword: data.requirePassword,
+        };
+      }
+
+      if (data.requireRoleSelection) {
+        return {
+          success: false,
+          requireRoleSelection: true,
+          message: data.message,
+          roles: data.roles,
         };
       }
 

@@ -41,6 +41,11 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
+
   return (
     <aside className="w-64 border-r border-neutral-200 bg-white flex flex-col shrink-0 h-screen sticky top-0 select-none">
       {/* Brand Header */}
@@ -119,7 +124,7 @@ export function AdminSidebar() {
             </div>
           </div>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             title="Log out"
             className="p-1.5 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
           >

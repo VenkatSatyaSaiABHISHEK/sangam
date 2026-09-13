@@ -18,10 +18,14 @@ import {
   fetchUsersFromFirestore,
 } from '@/lib/firebase-db';
 
+import { getCachedData, setCachedData } from '@/lib/data-cache';
+
 export default function AdminMentorsPage() {
   const { showToast } = useToast();
-  const [mentors, setMentors] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [loading, setLoading] = useState(!cached?.mentors?.length);
+  const [mentors, setMentors] = useState<User[]>(cached?.mentors || []);
+  const [teams, setTeams] = useState<Team[]>(cached?.teams || []);
 
   // Add Modal
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -45,8 +49,6 @@ export default function AdminMentorsPage() {
   const [editYear, setEditYear] = useState('');
   const [editMentorType, setEditMentorType] = useState<'cohort' | 'support'>('cohort');
 
-  const [loading, setLoading] = useState(true);
-
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
@@ -57,6 +59,7 @@ export default function AdminMentorsPage() {
         const data = await res.json();
         apiMentors = data.mentors || [];
         apiTeams = data.teams || [];
+        setCachedData({ ...cached, mentors: apiMentors, teams: apiTeams });
       } else {
         apiMentors = db.getMentors();
         apiTeams = db.getTeams();

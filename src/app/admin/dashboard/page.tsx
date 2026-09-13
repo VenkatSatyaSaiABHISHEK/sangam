@@ -26,24 +26,30 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+import { getCachedData, setCachedData } from '@/lib/data-cache';
+
 export default function AdminDashboardPage() {
-  const [event, setEvent] = useState<EventInfo | null>(null);
-  const [students, setStudents] = useState<User[]>([]);
-  const [mentors, setMentors] = useState<User[]>([]);
-  const [teachers, setTeachers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [buses, setBuses] = useState<Bus[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [activities, setActivities] = useState<ActivityLog[]>([]);
-  const [photoCount, setPhotoCount] = useState<number>(0);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [loading, setLoading] = useState(!cached);
+
+  const [event, setEvent] = useState<EventInfo | null>(cached?.event || null);
+  const [students, setStudents] = useState<User[]>(cached?.students || []);
+  const [mentors, setMentors] = useState<User[]>(cached?.mentors || []);
+  const [teachers, setTeachers] = useState<User[]>(cached?.teachers || []);
+  const [teams, setTeams] = useState<Team[]>(cached?.teams || []);
+  const [buses, setBuses] = useState<Bus[]>(cached?.buses || []);
+  const [rooms, setRooms] = useState<Room[]>(cached?.rooms || []);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>(cached?.attendance || []);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(cached?.announcements || []);
+  const [activities, setActivities] = useState<ActivityLog[]>(cached?.activities || []);
+  const [photoCount, setPhotoCount] = useState<number>((cached?.photos || []).length);
 
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
       if (res.ok) {
         const data = await res.json();
+        setCachedData(data);
         if (data.event) setEvent(data.event);
         setStudents(data.students || []);
         setMentors(data.mentors || []);
@@ -68,6 +74,8 @@ export default function AdminDashboardPage() {
       setAnnouncements(db.getAnnouncements());
       setActivities(db.getActivityLogs(8));
       setPhotoCount(db.getPhotos().length);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,10 +143,19 @@ export default function AdminDashboardPage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider">Students</span>
               <Users className="w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-2xl font-bold text-neutral-950 mt-2">{totalStudents}</p>
-            <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
-              {totalStudents === 0 ? 'No students yet' : `${totalStudents} Registered`}
-            </span>
+            {loading ? (
+              <div className="space-y-1.5 mt-2">
+                <div className="h-7 w-12 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-16 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-neutral-950 mt-2">{totalStudents}</p>
+                <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
+                  {totalStudents === 0 ? 'No students yet' : `${totalStudents} Registered`}
+                </span>
+              </>
+            )}
           </Card>
         </Link>
 
@@ -148,10 +165,19 @@ export default function AdminDashboardPage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider">Mentors</span>
               <GraduationCap className="w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-2xl font-bold text-neutral-950 mt-2">{totalMentors}</p>
-            <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
-              {totalMentors === 0 ? 'No mentors yet' : `${totalMentors} Active`}
-            </span>
+            {loading ? (
+              <div className="space-y-1.5 mt-2">
+                <div className="h-7 w-12 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-16 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-neutral-950 mt-2">{totalMentors}</p>
+                <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
+                  {totalMentors === 0 ? 'No mentors yet' : `${totalMentors} Active`}
+                </span>
+              </>
+            )}
           </Card>
         </Link>
 
@@ -161,10 +187,19 @@ export default function AdminDashboardPage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider">Faculty</span>
               <Building className="w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-2xl font-bold text-neutral-950 mt-2">{totalFaculty}</p>
-            <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
-              {totalFaculty === 0 ? 'No faculty yet' : `${totalFaculty} Observers`}
-            </span>
+            {loading ? (
+              <div className="space-y-1.5 mt-2">
+                <div className="h-7 w-12 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-16 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-neutral-950 mt-2">{totalFaculty}</p>
+                <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
+                  {totalFaculty === 0 ? 'No faculty yet' : `${totalFaculty} Observers`}
+                </span>
+              </>
+            )}
           </Card>
         </Link>
 
@@ -174,10 +209,19 @@ export default function AdminDashboardPage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider">Judges</span>
               <Scale className="w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-2xl font-bold text-neutral-950 mt-2">{totalJudges}</p>
-            <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
-              {totalJudges === 0 ? 'No judges yet' : `${totalJudges} Evaluators`}
-            </span>
+            {loading ? (
+              <div className="space-y-1.5 mt-2">
+                <div className="h-7 w-12 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-16 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-neutral-950 mt-2">{totalJudges}</p>
+                <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
+                  {totalJudges === 0 ? 'No judges yet' : `${totalJudges} Evaluators`}
+                </span>
+              </>
+            )}
           </Card>
         </Link>
 
@@ -187,10 +231,19 @@ export default function AdminDashboardPage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider">Teams</span>
               <Layers className="w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-2xl font-bold text-neutral-950 mt-2">{totalTeams}</p>
-            <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
-              {totalTeams === 0 ? 'No teams created' : `${totalTeams} Active Teams`}
-            </span>
+            {loading ? (
+              <div className="space-y-1.5 mt-2">
+                <div className="h-7 w-12 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-16 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-neutral-950 mt-2">{totalTeams}</p>
+                <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
+                  {totalTeams === 0 ? 'No teams created' : `${totalTeams} Active Teams`}
+                </span>
+              </>
+            )}
           </Card>
         </Link>
 
@@ -200,10 +253,19 @@ export default function AdminDashboardPage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider">Buses</span>
               <BusIcon className="w-4 h-4 text-neutral-400" />
             </div>
-            <p className="text-2xl font-bold text-neutral-950 mt-2">{totalBuses}</p>
-            <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
-              {totalBuses === 0 ? 'No fleet buses' : `${totalBuses} Transport Units`}
-            </span>
+            {loading ? (
+              <div className="space-y-1.5 mt-2">
+                <div className="h-7 w-12 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-16 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-neutral-950 mt-2">{totalBuses}</p>
+                <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">
+                  {totalBuses === 0 ? 'No fleet buses' : `${totalBuses} Transport Units`}
+                </span>
+              </>
+            )}
           </Card>
         </Link>
       </div>

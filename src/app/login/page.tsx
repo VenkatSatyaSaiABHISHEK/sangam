@@ -21,6 +21,13 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<Array<{
+    role: string;
+    label: string;
+    name?: string;
+    requiresPassword?: boolean;
+  }>>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('admin');
 
   const isAdminEmail = (val: string) => {
     const lower = val.trim().toLowerCase();
@@ -32,11 +39,59 @@ function LoginForm() {
     );
   };
 
+  const checkRolesForEmail = async (val: string) => {
+    const clean = val.trim().toLowerCase();
+    if (!clean || !clean.includes('@')) {
+      setAvailableRoles([]);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: clean, action: 'checkRoles' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.multipleRoles && Array.isArray(data.roles)) {
+          setAvailableRoles(data.roles);
+          if (!selectedRole || !data.roles.some((r: any) => r.role === selectedRole)) {
+            setSelectedRole(data.roles[0].role);
+          }
+          const curr = data.roles.find((r: any) => r.role === (selectedRole || data.roles[0].role));
+          setShowPassword(Boolean(curr?.requiresPassword));
+        } else {
+          setAvailableRoles([]);
+          setShowPassword(isAdminEmail(clean));
+        }
+      }
+    } catch {
+      setShowPassword(isAdminEmail(clean));
+    }
+  };
+
   const handleEmailChange = (val: string) => {
     setEmail(val);
-    if (isAdminEmail(val)) {
+    const lower = val.trim().toLowerCase();
+    if (lower === 'abhi31mahi@gmail.com') {
+      setAvailableRoles([
+        { role: 'admin', label: 'Master Administrator', name: 'Master Administrator', requiresPassword: true },
+        { role: 'mentor', label: 'Summit Mentor', name: 'Abhishek', requiresPassword: false },
+      ]);
+      if (selectedRole === 'admin') setShowPassword(true);
+    } else if (isAdminEmail(val)) {
+      setAvailableRoles([]);
       setShowPassword(true);
+    } else {
+      setShowPassword(false);
     }
+  };
+
+  const handleRoleSelect = (roleKey: string) => {
+    setSelectedRole(roleKey);
+    const target = availableRoles.find((r) => r.role === roleKey);
+    setShowPassword(Boolean(target?.requiresPassword));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,14 +101,23 @@ function LoginForm() {
       return;
     }
 
-    if (isAdminEmail(email) && !password.trim()) {
+    const activeRoleNeedsPassword =
+      availableRoles.length > 0
+        ? Boolean(availableRoles.find((r) => r.role === selectedRole)?.requiresPassword)
+        : isAdminEmail(email);
+
+    if (activeRoleNeedsPassword && !password.trim()) {
       setShowPassword(true);
       showToast('Password Required', 'Administrative accounts require a master password.', 'error');
       return;
     }
 
     setIsLoading(true);
-    const res = await login(email.trim(), password);
+    const res = await login(
+      email.trim(),
+      password,
+      availableRoles.length > 0 ? selectedRole : undefined
+    );
     setIsLoading(false);
 
     if (res.success && res.role) {
@@ -71,8 +135,13 @@ function LoginForm() {
       } else {
         router.push('/');
       }
+    } else if (res.requireRoleSelection && res.roles) {
+      setAvailableRoles(res.roles);
+      setSelectedRole(res.roles[0].role);
+      setShowPassword(Boolean(res.roles[0].requiresPassword));
+      showToast('Choose Portal', res.message || 'Please select which portal you wish to log into.', 'info');
     } else {
-      if (res.requirePassword || isAdminEmail(email)) {
+      if (res.requirePassword || activeRoleNeedsPassword) {
         setShowPassword(true);
         showToast('Password Required', res.message || 'Administrative accounts require a master password.', 'error');
       } else {
@@ -82,10 +151,13 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white border border-neutral-200/80 shadow-sm rounded-2xl space-y-6">
+    <div className="min-h-screen bg-neutral-50/50 flex flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-md p-6 sm:p-8 bg-white border border-neutral-200/80 shadow-md rounded-2xl space-y-6">
         <div>
-          <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Sign In to Your Account</h2>
+          <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Sign In to Sangam</h2>
+          <p className="text-xs text-neutral-500 mt-1">
+            Enter your registered summit email to access your workspace.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,14 +172,54 @@ function LoginForm() {
                 required
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
+                onBlur={(e) => checkRolesForEmail(e.target.value)}
                 placeholder="e.g. attendee@sangam.in or mentor@corp.com"
                 className="pl-9 text-xs h-10"
               />
             </div>
           </div>
 
+          {/* DUAL ROLE SELECTOR: Appears if email is connected to multiple roles (e.g. Admin & Mentor) */}
+          {availableRoles.length > 1 && (
+            <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2 animate-in fade-in duration-200">
+              <span className="text-[11px] font-bold text-neutral-700 block uppercase tracking-wider">
+                Select Your Login Portal:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {availableRoles.map((r) => {
+                  const isSelected = selectedRole === r.role;
+                  return (
+                    <button
+                      key={r.role}
+                      type="button"
+                      onClick={() => handleRoleSelect(r.role)}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs'
+                          : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300'
+                      }`}
+                    >
+                      <span className="text-xs font-bold block leading-tight">
+                        {r.role === 'admin'
+                          ? '🛡️ Admin'
+                          : r.role === 'mentor'
+                          ? '🎓 Mentor'
+                          : r.role === 'teacher'
+                          ? '🏛️ Faculty'
+                          : '🚀 Student'}
+                      </span>
+                      <span className={`text-[10px] block truncate mt-0.5 ${isSelected ? 'text-neutral-300' : 'text-neutral-400'}`}>
+                        {r.name || r.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {showPassword && (
-            <div>
+            <div className="animate-in fade-in duration-150">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-neutral-700">
                   Password (Admin Access)
@@ -138,7 +250,19 @@ function LoginForm() {
               </>
             ) : (
               <span className="flex items-center justify-center gap-1.5">
-                <span>Continue to Portal</span>
+                <span>
+                  {availableRoles.length > 1
+                    ? `Continue as ${
+                        selectedRole === 'admin'
+                          ? 'Master Admin'
+                          : selectedRole === 'mentor'
+                          ? 'Mentor'
+                          : selectedRole === 'teacher'
+                          ? 'Faculty'
+                          : 'Student'
+                      }`
+                    : 'Continue to Portal'}
+                </span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
             )}

@@ -80,13 +80,17 @@ function getInitials(name?: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+import { getCachedData, setCachedData } from '@/lib/data-cache';
+
 export default function AdminTeamsPage() {
   const { showToast } = useToast();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [students, setStudents] = useState<User[]>([]);
-  const [mentors, setMentors] = useState<User[]>([]);
-  const [buses, setBuses] = useState<Bus[]>([]);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [loading, setLoading] = useState(!cached?.teams?.length);
+  const [teams, setTeams] = useState<Team[]>(cached?.teams ? sortTeams(cached.teams) : []);
+  const [students, setStudents] = useState<User[]>(cached?.students || []);
+  const [mentors, setMentors] = useState<User[]>(cached?.mentors || []);
+  const [buses, setBuses] = useState<Bus[]>(cached?.buses || []);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>(cached?.attendance || []);
   const [search, setSearch] = useState('');
 
   // Modals
@@ -113,13 +117,12 @@ export default function AdminTeamsPage() {
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignMentorId, setAssignMentorId] = useState('');
 
-  const [loading, setLoading] = useState(true);
-
   const loadData = async () => {
     try {
       const res = await fetch('/api/data');
       if (res && res.ok) {
         const data = await res.json();
+        setCachedData(data);
         if (data.teams) setTeams(sortTeams(data.teams));
         if (data.students) setStudents(data.students || []);
         if (data.mentors) setMentors(data.mentors || []);

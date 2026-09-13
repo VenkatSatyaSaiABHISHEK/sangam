@@ -18,9 +18,11 @@ import {
   CheckCircle2,
   ExternalLink,
 } from 'lucide-react';
+import { getCachedData, setCachedData } from '@/lib/data-cache';
 
 export default function AdminRoomsPage() {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [rooms, setRooms] = useState<Room[]>(cached?.rooms || []);
   const [selectedRoomForShare, setSelectedRoomForShare] = useState<Room | null>(null);
 
   useEffect(() => {
@@ -29,7 +31,9 @@ export default function AdminRoomsPage() {
         const res = await fetch('/api/data');
         if (res.ok) {
           const data = await res.json();
-          setRooms(data.rooms || []);
+          const r = data.rooms || [];
+          setRooms(r);
+          setCachedData({ ...cached, rooms: r });
           return;
         }
       } catch {}

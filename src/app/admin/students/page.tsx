@@ -37,11 +37,15 @@ import {
 import { StudentExcelModal } from '@/components/admin';
 import { exportStudentsToExcel } from '@/lib/excel-utils';
 
+import { getCachedData, setCachedData } from '@/lib/data-cache';
+
 export default function AdminStudentsPage() {
   const { showToast } = useToast();
-  const [students, setStudents] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [buses, setBuses] = useState<Bus[]>([]);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [loading, setLoading] = useState(!cached?.students?.length);
+  const [students, setStudents] = useState<User[]>(cached?.students || []);
+  const [teams, setTeams] = useState<Team[]>(cached?.teams || []);
+  const [buses, setBuses] = useState<Bus[]>(cached?.buses || []);
   const [search, setSearch] = useState('');
   const [teamFilter, setTeamFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -82,6 +86,7 @@ export default function AdminStudentsPage() {
         apiStudents = data.students || [];
         apiTeams = data.teams || [];
         apiBuses = data.buses || [];
+        setCachedData({ ...cached, students: apiStudents, teams: apiTeams, buses: apiBuses });
       } else {
         apiStudents = db.getStudents();
         apiTeams = db.getTeams();
@@ -107,6 +112,8 @@ export default function AdminStudentsPage() {
       setStudents(db.getStudents());
       setTeams(db.getTeams());
       setBuses(db.getBuses());
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -251,8 +258,11 @@ export default function AdminStudentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-neutral-950">
-            Student Management ({students.length})
+          <h1 className="text-xl font-bold tracking-tight text-neutral-950 flex items-center gap-2">
+            <span>Student Management</span>
+            {!loading && (
+              <span className="text-neutral-500 font-normal">({students.length})</span>
+            )}
           </h1>
           <p className="text-xs text-neutral-500 mt-0.5">
             Register students, manage cohort teams, assign transit buses, and inspect status.
@@ -338,7 +348,26 @@ export default function AdminStudentsPage() {
       </div>
 
       {/* Table or Empty State */}
-      {filteredStudents.length === 0 ? (
+      {loading ? (
+        <Card className="overflow-hidden border-neutral-200 shadow-xs">
+          <div className="p-5 space-y-3.5">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-neutral-200 animate-pulse" />
+                  <div className="space-y-1">
+                    <div className="h-4 w-32 bg-neutral-200 rounded animate-pulse" />
+                    <div className="h-3 w-20 bg-neutral-100 rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="hidden sm:block h-4 w-28 bg-neutral-100 rounded animate-pulse" />
+                <div className="hidden md:block h-4 w-20 bg-neutral-100 rounded animate-pulse" />
+                <div className="h-4 w-14 bg-neutral-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : filteredStudents.length === 0 ? (
         <Card className="p-12 text-center space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center mx-auto">
             <Users className="w-6 h-6" />

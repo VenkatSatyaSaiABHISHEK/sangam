@@ -1400,6 +1400,34 @@
   ],
   "activityLogs": [
     {
+      "id": "act_1789296595257",
+      "eventId": "summit-2027",
+      "actorId": "admin-root",
+      "actorName": "Master Administrator",
+      "actorRole": "admin",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "admin"
+      },
+      "timestamp": "2026-09-13T10:49:55.257Z"
+    },
+    {
+      "id": "act_1789296585477",
+      "eventId": "summit-2027",
+      "actorId": "mentor-5o10",
+      "actorName": "Abhishek",
+      "actorRole": "mentor",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "abhi31mahi@gmail.com",
+        "role": "mentor"
+      },
+      "timestamp": "2026-09-13T10:49:45.477Z"
+    },
+    {
       "id": "act_1789295902795",
       "eventId": "summit-2027",
       "actorId": "admin-root",

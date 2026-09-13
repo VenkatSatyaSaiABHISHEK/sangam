@@ -16,10 +16,13 @@ import {
   deleteUserFromFirestore,
   fetchUsersFromFirestore,
 } from '@/lib/firebase-db';
+import { getCachedData, setCachedData } from '@/lib/data-cache';
 
 export default function AdminTeachersPage() {
   const { showToast } = useToast();
-  const [teachers, setTeachers] = useState<User[]>([]);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [loading, setLoading] = useState(!cached?.teachers?.length);
+  const [teachers, setTeachers] = useState<User[]>(cached?.teachers || []);
 
   // Modal State
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -36,6 +39,7 @@ export default function AdminTeachersPage() {
       if (res.ok) {
         const data = await res.json();
         apiTeachers = data.teachers || [];
+        setCachedData({ ...cached, teachers: apiTeachers });
       } else {
         apiTeachers = db.getTeachers();
       }
@@ -55,6 +59,8 @@ export default function AdminTeachersPage() {
       setTeachers(apiTeachers);
     } catch {
       setTeachers(db.getTeachers());
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,7 +132,7 @@ export default function AdminTeachersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-neutral-950">
-            Teachers & Faculty ({teachers.length})
+            Teachers & Faculty {loading && teachers.length === 0 ? '' : `(${teachers.length})`}
           </h1>
           <p className="text-xs text-neutral-500 mt-0.5">
             Faculty members and teachers overseeing student cohorts, viewing rosters, and supporting summit operations.
@@ -139,8 +145,25 @@ export default function AdminTeachersPage() {
         </Button>
       </div>
 
-      {/* Grid or Empty State */}
-      {teachers.length === 0 ? (
+      {/* Grid, Skeleton or Empty State */}
+      {loading && teachers.length === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-5 flex flex-col justify-between space-y-4 border-neutral-200 animate-pulse">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-neutral-200 shrink-0" />
+                  <div className="space-y-1.5 flex-1">
+                    <div className="h-4 w-28 bg-neutral-200 rounded" />
+                    <div className="h-3 w-36 bg-neutral-100 rounded" />
+                  </div>
+                </div>
+                <div className="h-3 w-24 bg-neutral-100 rounded" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : teachers.length === 0 ? (
         <Card className="p-12 text-center space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center mx-auto">
             <Building className="w-6 h-6" />

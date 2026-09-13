@@ -17,10 +17,13 @@ import {
   Clock,
 } from 'lucide-react';
 
+import { getCachedData, setCachedData } from '@/lib/data-cache';
+
 export default function AdminBusesPage() {
   const { showToast } = useToast();
-  const [buses, setBuses] = useState<Bus[]>([]);
-  const [students, setStudents] = useState<User[]>([]);
+  const cached = typeof window !== 'undefined' ? getCachedData() : null;
+  const [buses, setBuses] = useState<Bus[]>(cached?.buses || []);
+  const [students, setStudents] = useState<User[]>(cached?.students || []);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
 
   // Create Bus modal
@@ -36,9 +39,12 @@ export default function AdminBusesPage() {
       const res = await fetch('/api/data');
       if (res.ok) {
         const data = await res.json();
-        setBuses(data.buses || []);
-        setStudents(data.students || []);
+        const b = data.buses || [];
+        const s = data.students || [];
+        setBuses(b);
+        setStudents(s);
         setAttendance(data.attendance || []);
+        setCachedData({ ...cached, buses: b, students: s });
         return;
       }
     } catch {}
