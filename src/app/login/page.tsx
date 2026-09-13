@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/toast';
-import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -21,6 +21,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [availableRoles, setAvailableRoles] = useState<Array<{
     role: string;
     label: string;
@@ -73,6 +74,7 @@ function LoginForm() {
 
   const handleEmailChange = (val: string) => {
     setEmail(val);
+    setErrorMessage('');
     const lower = val.trim().toLowerCase();
     if (lower === 'abhi31mahi@gmail.com') {
       setAvailableRoles([
@@ -90,12 +92,14 @@ function LoginForm() {
 
   const handleRoleSelect = (roleKey: string) => {
     setSelectedRole(roleKey);
+    setErrorMessage('');
     const target = availableRoles.find((r) => r.role === roleKey);
     setShowPassword(Boolean(target?.requiresPassword));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     if (!email.trim()) {
       showToast('Input Required', 'Please enter your registered Sangam email address.', 'error');
       return;
@@ -108,6 +112,7 @@ function LoginForm() {
 
     if (activeRoleNeedsPassword && !password.trim()) {
       setShowPassword(true);
+      setErrorMessage('Administrator password is required.');
       showToast('Password Required', 'Administrative accounts require a master password.', 'error');
       return;
     }
@@ -143,9 +148,13 @@ function LoginForm() {
     } else {
       if (res.requirePassword || activeRoleNeedsPassword) {
         setShowPassword(true);
-        showToast('Password Required', res.message || 'Administrative accounts require a master password.', 'error');
+        const msg = res.message || 'Invalid administrator password.';
+        setErrorMessage(msg);
+        showToast(msg.toLowerCase().includes('invalid') ? 'Invalid Password' : 'Password Required', msg, 'error');
       } else {
-        showToast('Account Not Found', res.message || 'No registered participant found with this email.', 'error');
+        const msg = res.message || 'No registered participant found with this email.';
+        setErrorMessage(msg);
+        showToast('Account Not Found', msg, 'error');
       }
     }
   };
@@ -230,11 +239,21 @@ function LoginForm() {
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrorMessage('');
+                  }}
                   placeholder="Enter administrator password"
                   className="pl-9 text-xs h-10"
                 />
               </div>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{errorMessage}</span>
             </div>
           )}
 

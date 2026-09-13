@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const configuredAdmin = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
-    const adminPassword = process.env.ADMIN_PASSWORD || 'SangamAdmin2027!';
+    const configuredAdmin = (process.env.ADMIN_EMAIL || 'abhi31mahi@gmail.com').trim().toLowerCase();
+    const adminPassword = (process.env.ADMIN_PASSWORD || 'Mahi31Abhi').trim();
     const isMasterAdmin =
       email === 'admin@sangamconnect.org' ||
       email === 'admin@summitconnect.org' ||
@@ -179,14 +179,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const validPasswords = [
-        adminPassword,
-        'Mahi31Abhi',
-        'SangamAdmin2027!',
-        'SummitAdmin2027!',
-      ].filter(Boolean);
-
-      if (!validPasswords.includes(password)) {
+      if (password.trim() !== adminPassword) {
         return NextResponse.json(
           { error: 'Invalid administrator password.', requirePassword: true },
           { status: 401 }
