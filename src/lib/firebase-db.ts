@@ -193,6 +193,17 @@ export async function saveAnnouncementToFirestore(ann: Announcement): Promise<bo
   }
 }
 
+export async function deleteAnnouncementFromFirestore(annId: string): Promise<boolean> {
+  if (!isFirestoreReady() || !dbFirestore) return false;
+  try {
+    await deleteDoc(doc(dbFirestore, ANNOUNCEMENTS_COL, annId));
+    return true;
+  } catch (err: any) {
+    console.error(`[Firestore Error] Failed to delete announcement ${annId}:`, err.message || err);
+    return false;
+  }
+}
+
 export async function fetchAnnouncementsFromFirestore(): Promise<Announcement[]> {
   if (!isFirestoreReady() || !dbFirestore) return [];
   try {

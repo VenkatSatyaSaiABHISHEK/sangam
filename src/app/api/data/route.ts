@@ -10,6 +10,7 @@ import {
   saveBusToFirestore,
   deleteBusFromFirestore,
   saveAnnouncementToFirestore,
+  deleteAnnouncementFromFirestore,
   saveAttendanceToFirestore,
   saveRoomToFirestore,
   deleteRoomFromFirestore,
@@ -182,6 +183,14 @@ export async function POST(req: NextRequest) {
         if (student) {
           try {
             await saveUserToFirestore(student);
+            if (student.teamId) {
+              const t = db.getTeamById(student.teamId);
+              if (t) saveTeamToFirestore(t).catch(() => {});
+            }
+            if (student.busId) {
+              const b = db.getBusById(student.busId);
+              if (b) saveBusToFirestore(b).catch(() => {});
+            }
           } catch (e) {
             console.warn('Firestore sync student update:', e);
           }
@@ -401,6 +410,7 @@ export async function POST(req: NextRequest) {
           (db as any).data.announcements.splice(idx, 1);
           (db as any).saveToFile();
         }
+        deleteAnnouncementFromFirestore(payload.id).catch(() => {});
         return NextResponse.json({ success: true });
       }
 
