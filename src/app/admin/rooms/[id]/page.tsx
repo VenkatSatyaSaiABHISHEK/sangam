@@ -27,6 +27,8 @@ import {
   Search,
   FileText,
   Image as ImageIcon,
+  Pause,
+  Play,
 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 
@@ -42,6 +44,35 @@ export default function AdminRoomDetailPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPausing, setIsPausing] = useState(false);
+
+  const togglePauseRoom = async () => {
+    if (!room) return;
+    setIsPausing(true);
+    try {
+      const res = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggleRoomActive', payload: { id: room.id } }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to toggle room status');
+
+      const nextActive = data.isActive ?? !room.isActive;
+      setRoom((prev) => (prev ? { ...prev, isActive: nextActive } : prev));
+      showToast(
+        nextActive ? 'Room Resumed' : 'Room Paused',
+        nextActive
+          ? 'Room is now live and accepting submissions.'
+          : 'Room submissions are temporarily locked.',
+        nextActive ? 'success' : 'info'
+      );
+    } catch (err: any) {
+      showToast('Error', err.message || 'Could not update room status', 'error');
+    } finally {
+      setIsPausing(false);
+    }
+  };
 
   const loadRoomAndSubmissions = useCallback(async (isSilent = false) => {
     if (!roomId) return;
@@ -209,12 +240,34 @@ export default function AdminRoomDetailPage() {
                   Attendance Enabled
                 </Badge>
               )}
+              <Badge
+                variant={room.isActive !== false ? 'success' : 'warning'}
+                className="text-[10px]"
+              >
+                {room.isActive !== false ? '● Active' : '⏸ Paused'}
+              </Badge>
             </div>
             <p className="text-xs text-neutral-500 mt-0.5">{room.purpose}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant={room.isActive !== false ? 'outline' : 'primary'}
+            onClick={togglePauseRoom}
+            isLoading={isPausing}
+            className={
+              room.isActive !== false
+                ? 'gap-1.5 text-amber-700 border-amber-300 hover:bg-amber-50 cursor-pointer'
+                : 'gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 cursor-pointer'
+            }
+            title={room.isActive !== false ? 'Pause Submissions' : 'Resume Submissions'}
+          >
+            {room.isActive !== false ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            <span>{room.isActive !== false ? 'Pause Room' : 'Resume Room'}</span>
+          </Button>
+
           <Button
             size="sm"
             variant="outline"

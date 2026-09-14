@@ -10,6 +10,7 @@ import {
   saveChannelSettings,
   fetchChannelSettings,
 } from '@/lib/firebase-db';
+import Link from 'next/link';
 import {
   Send,
   Paperclip,
@@ -20,6 +21,9 @@ import {
   Download,
   Loader2,
   ChevronDown,
+  ArrowLeft,
+  MessageCircle,
+  Sparkles,
 } from 'lucide-react';
 import { sendDevicePushNotification } from '@/lib/push-notifications';
 import { cn } from '@/lib/utils';
@@ -49,11 +53,29 @@ function playMessageSound() {
   } catch {}
 }
 
-export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
+export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const userRole = user?.role;
+  const isActuallyAdmin =
+    userRole === 'admin' ||
+    user?.email?.toLowerCase().includes('admin') ||
+    user?.fullName?.toLowerCase().includes('admin');
 
-  const effectiveRole = userRoleOverride || user?.role || 'student';
+  const isActuallyMentor =
+    !isActuallyAdmin &&
+    (userRole === 'mentor' ||
+      user?.email?.toLowerCase().includes('mentor') ||
+      user?.fullName?.toLowerCase().includes('mentor'));
+
+  const effectiveRole = isActuallyAdmin
+    ? 'admin'
+    : isActuallyMentor
+    ? 'mentor'
+    : userRole === 'teacher' || userRole === 'faculty' || userRole === 'judge'
+    ? userRole
+    : userRoleOverride || userRole || 'student';
+
   const isMentorOrFaculty =
     effectiveRole === 'mentor' ||
     effectiveRole === 'teacher' ||
@@ -275,11 +297,26 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
       }
     }
 
+    const senderRoleToSave: 'admin' | 'mentor' | 'teacher' | 'student' =
+      effectiveRole === 'admin'
+        ? 'admin'
+        : effectiveRole === 'mentor'
+        ? 'mentor'
+        : effectiveRole === 'teacher' || effectiveRole === 'faculty' || effectiveRole === 'judge'
+        ? 'teacher'
+        : 'student';
+
     const newMsg: ChannelMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      senderId: user?.id || 'guest',
-      senderName: user?.fullName || (effectiveRole === 'mentor' ? 'Advisor' : 'Student'),
-      senderRole: effectiveRole,
+      senderId: user?.id || (isActuallyAdmin ? 'admin' : 'guest'),
+      senderName:
+        user?.fullName ||
+        (senderRoleToSave === 'admin'
+          ? 'Administrator'
+          : senderRoleToSave === 'mentor'
+          ? 'Mentor'
+          : 'Student'),
+      senderRole: senderRoleToSave,
       senderEmail: user?.email,
       teamName: user?.teamName,
       content: content,
@@ -316,130 +353,268 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
   const allowedToPost = canUserPost();
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 w-full bg-white relative overflow-hidden select-none">
-      {/* 1. CHAT STREAM (Compact Bubbles, Senders on Left, Mine on Right) */}
+    <div className="flex-1 flex flex-col min-h-0 w-full bg-white md:rounded-2xl md:border md:border-neutral-200/80 md:shadow-xs relative overflow-hidden select-none">
+      {/* 1. CHANNEL HEADER */}
+      <div className="shrink-0 bg-white border-b border-neutral-200 px-3.5 py-2.5 flex items-center justify-between shadow-2xs z-10">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {backPath && (
+            <Link
+              href={backPath}
+              className="p-1.5 -ml-1 rounded-lg text-neutral-500 hover:text-neutral-950 hover:bg-neutral-100 transition-colors cursor-pointer shrink-0"
+              title="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+          )}
+
+          <div className="relative shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 text-white flex items-center justify-center shadow-2xs">
+              <MessageCircle className="w-4 h-4 text-white" />
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse" />
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h2 className="font-bold text-xs sm:text-sm text-neutral-900 truncate">
+                Sangam Open Channel
+              </h2>
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                LIVE
+              </span>
+            </div>
+            <p className="text-[10.5px] text-neutral-500 truncate">
+              Public Summit Broadcast • Mentors, Faculty &amp; Students
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            className={cn(
+              'text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase border tracking-wider',
+              isActuallyAdmin
+                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                : isActuallyMentor
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                : 'bg-neutral-100 text-neutral-700 border-neutral-200'
+            )}
+          >
+            {effectiveRole}
+          </span>
+        </div>
+      </div>
+
+      {/* 2. CHAT STREAM (Sleek Modern WhatsApp / Slack Aesthetic) */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 relative bg-neutral-50/50 overscroll-contain"
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 relative bg-[#F8FAFC] overscroll-contain"
       >
-        {messages.map((msg) => {
-          const isMe =
-            (user?.id && msg.senderId === user.id) ||
-            (user?.email && msg.senderEmail?.toLowerCase() === user.email.toLowerCase());
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-neutral-400">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-neutral-200 flex items-center justify-center shadow-xs text-neutral-600">
+              <MessageCircle className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-semibold text-neutral-700">Welcome to Sangam Open Channel</p>
+            <p className="text-[11px] text-neutral-500 max-w-xs">
+              No messages yet. Feel free to start the conversation or ask mentors questions!
+            </p>
+          </div>
+        ) : (
+          messages.map((msg, index) => {
+            const isMe =
+              (user?.id && msg.senderId === user.id) ||
+              (user?.email && msg.senderEmail && msg.senderEmail.toLowerCase() === user.email.toLowerCase()) ||
+              (user?.fullName && msg.senderName && msg.senderName.toLowerCase() === user.fullName.toLowerCase()) ||
+              (isActuallyAdmin && (msg.senderRole === 'admin' || msg.senderName === 'Master Administrator'));
 
-          const roleDisplay =
-            msg.senderRole === 'mentor'
-              ? 'MENTOR'
-              : msg.senderRole === 'teacher' || msg.senderRole === 'faculty' || msg.senderRole === 'judge'
-              ? 'FACULTY'
-              : msg.senderRole === 'admin'
+            const isMsgAdmin =
+              msg.senderRole === 'admin' ||
+              msg.senderId === 'admin' ||
+              msg.senderName?.toLowerCase().includes('admin') ||
+              msg.senderEmail?.toLowerCase().includes('admin');
+
+            const isMsgMentor =
+              !isMsgAdmin &&
+              (msg.senderRole === 'mentor' ||
+                msg.senderName?.toLowerCase().includes('mentor') ||
+                (msg.senderEmail && (msg.senderEmail.includes('mentor') || msg.senderEmail.includes('@mentor.'))));
+
+            const isMsgFaculty =
+              !isMsgAdmin &&
+              !isMsgMentor &&
+              (msg.senderRole === 'teacher' || msg.senderRole === 'faculty' || msg.senderRole === 'judge');
+
+            const roleDisplay = isMsgAdmin
               ? 'ADMIN'
+              : isMsgMentor
+              ? 'MENTOR'
+              : isMsgFaculty
+              ? 'FACULTY'
               : 'STUDENT';
 
-          const timeStr = new Date(msg.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          });
+            const msgDate = new Date(msg.createdAt);
+            const now = new Date();
+            const isToday =
+              msgDate.getDate() === now.getDate() &&
+              msgDate.getMonth() === now.getMonth() &&
+              msgDate.getFullYear() === now.getFullYear();
 
-          // Incoming Message from Others (Rendered on LEFT with Profile Avatar)
-          if (!isMe) {
+            const yesterday = new Date();
+            yesterday.setDate(now.getDate() - 1);
+            const isYesterday =
+              msgDate.getDate() === yesterday.getDate() &&
+              msgDate.getMonth() === yesterday.getMonth() &&
+              msgDate.getFullYear() === yesterday.getFullYear();
+
+            const dateLabel = isToday
+              ? 'Today'
+              : isYesterday
+              ? 'Yesterday'
+              : msgDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+            const timeLabel = msgDate.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+
+            const dateTimeDisplay = `${dateLabel}, ${timeLabel}`;
+
+            // Optional Date Separator between distinct days
+            const prevMsg = index > 0 ? messages[index - 1] : null;
+            const prevDate = prevMsg ? new Date(prevMsg.createdAt) : null;
+            const showDateHeader =
+              !prevDate ||
+              prevDate.getDate() !== msgDate.getDate() ||
+              prevDate.getMonth() !== msgDate.getMonth();
+
             return (
-              <div key={msg.id} className="flex items-start gap-2 max-w-[85%] sm:max-w-[78%] mr-auto">
-                {/* Profile Avatar on the Left */}
-                <div className="w-6 h-6 rounded-full bg-neutral-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0 shadow-2xs border border-neutral-700 mt-0.5">
-                  {msg.senderName?.charAt(0).toUpperCase() || 'U'}
-                </div>
+              <React.Fragment key={msg.id}>
+                {showDateHeader && (
+                  <div className="flex justify-center my-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-200/80 text-slate-600 text-[9.5px] font-semibold tracking-wider uppercase shadow-2xs select-none">
+                      {dateLabel}
+                    </span>
+                  </div>
+                )}
 
-                {/* Message Bubble Column */}
-                <div className="flex flex-col items-start min-w-0">
-                  {/* Sender Name & Role Label */}
-                  <div className="flex items-center gap-1 mb-0.5 px-0.5 text-[10px]">
-                    <span className="font-bold text-neutral-950">{msg.senderName}</span>
-                    <span
+                {/* INCOMING MESSAGE (Others - on the LEFT) */}
+                {!isMe ? (
+                  <div className="flex items-start gap-2.5 max-w-[88%] sm:max-w-[80%] mr-auto group">
+                    {/* Role Gradient Avatar */}
+                    <div
                       className={cn(
-                        'text-[8.5px] px-1 py-0.2 rounded font-mono uppercase font-semibold',
-                        msg.senderRole === 'mentor'
-                          ? 'bg-neutral-900 text-white'
-                          : 'bg-neutral-200 text-neutral-700'
+                        'w-7 h-7 rounded-full text-white flex items-center justify-center text-[10.5px] font-bold shrink-0 shadow-2xs mt-0.5 select-none',
+                        isMsgAdmin
+                          ? 'bg-gradient-to-br from-rose-500 to-red-600'
+                          : isMsgMentor
+                          ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                          : isMsgFaculty
+                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                          : 'bg-gradient-to-br from-sky-500 to-blue-600'
                       )}
                     >
-                      {roleDisplay}
-                    </span>
-                    {msg.teamName && (
-                      <span className="text-[9px] text-neutral-400 truncate">
-                        • {msg.teamName}
-                      </span>
-                    )}
-                  </div>
+                      {msg.senderName?.charAt(0).toUpperCase() || 'U'}
+                    </div>
 
-                  {/* Bubble Content (Small & Compact) */}
-                  <div className="bg-white border border-neutral-200/90 rounded-xl rounded-tl-xs px-3 py-1.5 text-xs shadow-2xs text-neutral-900 space-y-1 break-words select-text">
-                    {msg.isQuestion && (
-                      <div className="inline-flex items-center gap-1 text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 uppercase tracking-wider">
-                        <HelpCircle className="w-2.5 h-2.5 text-amber-600" /> Question
+                    {/* Message Bubble Column */}
+                    <div className="flex flex-col items-start min-w-0">
+                      {/* Sender Header */}
+                      <div className="flex items-center gap-1.5 mb-1 px-1 text-[11px]">
+                        <span className="font-bold text-neutral-950 tracking-tight">
+                          {msg.senderName}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-[8.5px] px-1.5 py-0.2 rounded font-mono uppercase font-bold tracking-wider',
+                            isMsgAdmin
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : isMsgMentor
+                              ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                              : isMsgFaculty
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
+                          )}
+                        >
+                          {roleDisplay}
+                        </span>
+                        {msg.teamName && (
+                          <span className="text-[9.5px] text-neutral-400 truncate font-medium">
+                            • {msg.teamName}
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    {msg.imageUrl && (
-                      <div className="rounded-lg overflow-hidden border border-neutral-200 max-w-xs">
-                        <img
-                          src={msg.imageUrl}
-                          alt="Attachment"
-                          onClick={() => setActiveLightboxImg(msg.imageUrl || null)}
-                          className="w-full max-h-52 object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                        />
+                      {/* White Bubble Card */}
+                      <div className="bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs px-3.5 py-2 text-xs shadow-2xs text-neutral-900 space-y-1.5 break-words select-text">
+                        {msg.isQuestion && (
+                          <div className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 uppercase tracking-wider">
+                            <HelpCircle className="w-3 h-3 text-amber-600" /> Question
+                          </div>
+                        )}
+
+                        {msg.imageUrl && (
+                          <div className="rounded-xl overflow-hidden border border-neutral-200 max-w-xs my-1 shadow-2xs">
+                            <img
+                              src={msg.imageUrl}
+                              alt="Attachment"
+                              onClick={() => setActiveLightboxImg(msg.imageUrl || null)}
+                              className="w-full max-h-56 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                            />
+                          </div>
+                        )}
+
+                        {msg.content && (
+                          <p className="leading-relaxed whitespace-pre-wrap text-[12.5px] text-neutral-800 font-normal pr-1">
+                            {msg.content}
+                          </p>
+                        )}
+
+                        <div className="text-[9.5px] text-neutral-400 text-right font-mono -mt-0.5 select-none">
+                          {dateTimeDisplay}
+                        </div>
                       </div>
-                    )}
-
-                    {msg.content && (
-                      <p className="leading-relaxed whitespace-pre-wrap text-[12px] pr-1">
-                        {msg.content}
-                      </p>
-                    )}
-
-                    <div className="text-[9px] text-neutral-400 text-right -mt-0.5">{timeStr}</div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                ) : (
+                  /* OUTGOING MESSAGE (Mine - on the RIGHT) */
+                  <div className="flex flex-col items-end max-w-[85%] sm:max-w-[78%] ml-auto group">
+                    <div className="bg-neutral-950 text-white rounded-2xl rounded-tr-xs px-3.5 py-2 text-xs shadow-xs space-y-1.5 break-words select-text">
+                      {msg.isQuestion && (
+                        <div className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-white border border-white/20 uppercase tracking-wider">
+                          <HelpCircle className="w-3 h-3 text-amber-400" /> Question
+                        </div>
+                      )}
+
+                      {msg.imageUrl && (
+                        <div className="rounded-xl overflow-hidden border border-white/20 max-w-xs my-1 shadow-2xs">
+                          <img
+                            src={msg.imageUrl}
+                            alt="Attachment"
+                            onClick={() => setActiveLightboxImg(msg.imageUrl || null)}
+                            className="w-full max-h-56 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                          />
+                        </div>
+                      )}
+
+                      {msg.content && (
+                        <p className="leading-relaxed whitespace-pre-wrap text-[12.5px] text-neutral-100 font-normal pr-1">
+                          {msg.content}
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-end gap-1 text-[9.5px] text-neutral-400 -mt-0.5 font-mono select-none">
+                        <span>{dateTimeDisplay}</span>
+                        <CheckCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
             );
-          }
-
-          // Outgoing Message from Current User (Rendered on RIGHT, Compact)
-          return (
-            <div key={msg.id} className="flex flex-col items-end max-w-[82%] sm:max-w-[75%] ml-auto">
-              <div className="bg-neutral-950 text-white rounded-xl rounded-tr-xs px-3 py-1.5 text-xs shadow-xs space-y-1 break-words select-text">
-                {msg.isQuestion && (
-                  <div className="inline-flex items-center gap-1 text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-white/15 text-white border border-white/20 uppercase tracking-wider">
-                    <HelpCircle className="w-2.5 h-2.5 text-amber-400" /> Question
-                  </div>
-                )}
-
-                {msg.imageUrl && (
-                  <div className="rounded-lg overflow-hidden border border-white/20 max-w-xs">
-                    <img
-                      src={msg.imageUrl}
-                      alt="Attachment"
-                      onClick={() => setActiveLightboxImg(msg.imageUrl || null)}
-                      className="w-full max-h-52 object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                    />
-                  </div>
-                )}
-
-                {msg.content && (
-                  <p className="leading-relaxed whitespace-pre-wrap text-[12px] text-white pr-1">
-                    {msg.content}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-end gap-1 text-[9px] text-neutral-400 -mt-0.5">
-                  <span>{timeStr}</span>
-                  <CheckCheck className="w-3 h-3 text-neutral-300" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+          })
+        )}
 
         <div ref={messagesEndRef} className="h-1" />
       </div>
@@ -462,32 +637,32 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
 
       {/* 3. ATTACHMENT PREVIEW TRAY */}
       {imagePreview && (
-        <div className="shrink-0 px-3 py-1.5 bg-neutral-100 border-t border-neutral-200 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="shrink-0 px-3.5 py-2 bg-neutral-100 border-t border-neutral-200 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-9 h-9 rounded-md object-cover border border-neutral-300 shadow-2xs"
+              className="w-9 h-9 rounded-lg object-cover border border-neutral-300 shadow-2xs"
             />
             <div className="text-xs">
-              <p className="font-semibold text-neutral-800 text-[11px]">Photo ready</p>
-              <p className="text-[9px] text-neutral-500">Will be sent with message</p>
+              <p className="font-bold text-neutral-800 text-[11px]">Photo Attached</p>
+              <p className="text-[9.5px] text-neutral-500">Will be broadcast with message</p>
             </div>
           </div>
           <button
             onClick={clearSelectedImage}
             className="p-1 rounded-full bg-neutral-200 hover:bg-neutral-300 text-neutral-700 cursor-pointer"
           >
-            <X className="w-3 h-3" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* 4. INPUT TRAY OR READ-ONLY STATUS NOTICE */}
+      {/* 4. PINNED BOTTOM INPUT TRAY */}
       {allowedToPost ? (
         <form
           onSubmit={handleSendMessage}
-          className="shrink-0 bg-white border-t border-neutral-200 p-2 flex items-center gap-1.5 shadow-xs"
+          className="shrink-0 bg-white border-t border-neutral-200 p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs z-10"
         >
           {/* Hidden File Input */}
           <input
@@ -503,7 +678,7 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending || isUploading}
-            className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-950 hover:bg-neutral-100 transition-colors cursor-pointer active:scale-95"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-neutral-500 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 transition-all flex items-center justify-center cursor-pointer shrink-0"
             title="Attach a photo"
           >
             <Paperclip className="w-4 h-4" />
@@ -514,26 +689,26 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
             type="button"
             onClick={() => setIsQuestion(!isQuestion)}
             className={cn(
-              'px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 border shrink-0',
+              'px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0 border',
               isQuestion
-                ? 'bg-neutral-950 text-white border-neutral-950'
+                ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
                 : 'bg-neutral-100 text-neutral-600 border-neutral-200 hover:bg-neutral-200'
             )}
             title="Mark as Question"
           >
-            <HelpCircle className="w-3 h-3" />
-            <span className="hidden sm:inline">Q&A</span>
+            <HelpCircle className={cn('w-3.5 h-3.5', isQuestion ? 'text-white' : 'text-amber-600')} />
+            <span className="hidden sm:inline text-[11px]">Question</span>
           </button>
 
           {/* Text Input */}
-          <div className="flex-1 relative">
+          <div className="flex-1 min-w-0">
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder={isQuestion ? 'Ask mentors a question...' : 'Type a message...'}
               disabled={isSending}
-              className="w-full bg-neutral-100 text-neutral-900 placeholder:text-neutral-400 text-xs px-3 py-2 rounded-xl border border-neutral-200 focus:outline-none focus:border-neutral-950 focus:ring-1 focus:ring-neutral-950 transition-all"
+              className="w-full bg-neutral-100/90 hover:bg-neutral-100 focus:bg-white text-neutral-900 placeholder:text-neutral-400 text-xs sm:text-sm px-3.5 py-2 sm:py-2.5 rounded-xl border border-neutral-200/80 focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950 transition-all shadow-2xs"
             />
           </div>
 
@@ -542,7 +717,7 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
             type="submit"
             disabled={isSending || isUploading || (!inputText.trim() && !selectedImage)}
             className={cn(
-              'w-8 h-8 rounded-xl bg-neutral-950 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90 shrink-0',
+              'w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neutral-950 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90 shrink-0',
               (!inputText.trim() && !selectedImage) || isSending
                 ? 'opacity-30 cursor-not-allowed'
                 : 'hover:bg-neutral-800'
@@ -558,7 +733,7 @@ export function OpenChannelView({ userRoleOverride }: OpenChannelViewProps) {
         </form>
       ) : (
         /* Read-Only Status when student does not have chat permission */
-        <div className="shrink-0 bg-neutral-50 border-t border-neutral-200 px-3 py-2 text-center text-xs text-neutral-600 flex items-center justify-center gap-2">
+        <div className="shrink-0 bg-neutral-50 border-t border-neutral-200 px-3 py-2.5 text-center text-xs text-neutral-600 flex items-center justify-center gap-2">
           <Lock className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
           <span className="text-[11px]">
             Chat permission is restricted by administration. Mentors and authorized students can post.

@@ -99,6 +99,14 @@ export async function POST(
       submittedAt: body.submittedAt || new Date().toISOString(),
     };
 
+    const currentRoom = db.getRoomById(roomId);
+    if (currentRoom && currentRoom.isActive === false) {
+      return NextResponse.json(
+        { error: 'This room session has been paused by organizers. Submissions are temporarily closed.' },
+        { status: 403 }
+      );
+    }
+
     // 1. Save to local disk & check attendance
     const saved = db.submitToRoom(submission);
 

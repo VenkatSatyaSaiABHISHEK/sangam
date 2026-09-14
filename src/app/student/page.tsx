@@ -8,7 +8,7 @@ import { Announcement, Room, AttendanceRecord, Team } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, isPhotoUploadedByUser, getLocalUploadedPhotoIds, saveLocalUploadedPhotoId } from '@/lib/utils';
 import {
   Bell,
   FileText,
@@ -23,6 +23,7 @@ import {
   Sparkles,
   ArrowRight,
   Smartphone,
+  X,
 } from 'lucide-react';
 import { InstallAppModal } from '@/components/pwa/install-app-modal';
 
@@ -36,13 +37,42 @@ export default function StudentHomePage() {
   const [totalPhotoCount, setTotalPhotoCount] = useState<number>(0);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('install=')) {
-      setInstallModalOpen(true);
+    if (typeof window !== 'undefined') {
+      if (window.location.search.includes('install=')) {
+        setInstallModalOpen(true);
+      }
+
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true;
+      const dismissed = localStorage.getItem('sangam_app_banner_dismissed') === 'true';
+      const downloaded = localStorage.getItem('sangam_app_downloaded') === 'true';
+
+      // Only show banner if not installed/standalone and not dismissed
+      if (!isStandalone && !dismissed && !downloaded) {
+        setShowInstallBanner(true);
+
+        // Auto-hide the download banner after 1 minute (60 seconds)
+        const timer = setTimeout(() => {
+          setShowInstallBanner(false);
+          localStorage.setItem('sangam_app_banner_dismissed', 'true');
+        }, 60000);
+
+        return () => clearTimeout(timer);
+      }
     }
   }, []);
+
+  const dismissInstallBanner = () => {
+    setShowInstallBanner(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sangam_app_banner_dismissed', 'true');
+    }
+  };
 
   const handleDirectPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,6 +88,7 @@ export default function StudentHomePage() {
           uploadedBy: {
             userId: user?.id || 'anonymous',
             name: user?.fullName || 'Student',
+            email: user?.email || '',
             role: 'student',
             teamName: user?.teamName,
           },
@@ -65,6 +96,11 @@ export default function StudentHomePage() {
       );
       const res = await fetch('/api/photos/upload', { method: 'POST', body: formData });
       if (res.ok) {
+        const uploadData = await res.json().catch(() => ({}));
+        const newPhotoId = uploadData.photo?.id || uploadData.photos?.[0]?.id;
+        if (newPhotoId) {
+          saveLocalUploadedPhotoId(newPhotoId);
+        }
         setMyPhotoCount((c) => c + 1);
         setTotalPhotoCount((c) => c + 1);
       }
@@ -78,6 +114,7 @@ export default function StudentHomePage() {
 
   useEffect(() => {
     const load = async () => {
+      const localIds = getLocalUploadedPhotoIds();
       try {
         const res = await fetch('/api/data');
         if (res.ok) {
@@ -90,11 +127,8 @@ export default function StudentHomePage() {
           }
           const allPhotos = data.photos || [];
           setTotalPhotoCount(allPhotos.length);
-          const userPhotos = allPhotos.filter(
-            (p: any) =>
-              p.uploadedBy?.userId === user?.id ||
-              (user?.email && p.uploadedBy?.userId === user.email) ||
-              (user?.fullName && p.uploadedBy?.name?.toLowerCase() === user.fullName.toLowerCase())
+          const userPhotos = allPhotos.filter((p: any) =>
+            isPhotoUploadedByUser(p, user, localIds)
           );
           setMyPhotoCount(userPhotos.length);
         }
@@ -107,11 +141,8 @@ export default function StudentHomePage() {
         }
         const allPhotos = db.getPhotos();
         setTotalPhotoCount(allPhotos.length);
-        const userPhotos = allPhotos.filter(
-          (p) =>
-            p.uploadedBy?.userId === user?.id ||
-            (user?.email && p.uploadedBy?.userId === user.email) ||
-            (user?.fullName && p.uploadedBy?.name?.toLowerCase() === user.fullName.toLowerCase())
+        const userPhotos = allPhotos.filter((p: any) =>
+          isPhotoUploadedByUser(p, user, localIds)
         );
         setMyPhotoCount(userPhotos.length);
       }
@@ -161,29 +192,48 @@ export default function StudentHomePage() {
         )}
       </div>
 
-      {/* App Install & Push Notification Banner */}
-      <div className="p-3 bg-neutral-900 text-white rounded-xl flex items-center justify-between gap-3 shadow-xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-            <Smartphone className="w-4 h-4 text-white" />
+      {/* App Install & Push Notification Banner (Auto-hides after 1 min or if downloaded) */}
+      {showInstallBanner && (
+        <div className="p-3 bg-neutral-900 text-white rounded-xl flex items-center justify-between gap-3 shadow-xs animate-in fade-in transition-all">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+              <Smartphone className="w-4 h-4 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold truncate">Download / Install Sangam App</p>
+              <p className="text-[10px] text-neutral-400 truncate">Push notifications &amp; native screen experience</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold truncate">Download / Install Sangam App</p>
-            <p className="text-[10px] text-neutral-400 truncate">Push notifications &amp; native screen experience</p>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => {
+                setInstallModalOpen(true);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('sangam_app_downloaded', 'true');
+                }
+              }}
+              className="px-3 py-1.5 rounded-lg bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-colors shadow-2xs cursor-pointer"
+            >
+              Install App
+            </button>
+            <button
+              onClick={dismissInstallBanner}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Dismiss"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
-        <button
-          onClick={() => setInstallModalOpen(true)}
-          className="px-3 py-1.5 rounded-lg bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-colors shrink-0 shadow-2xs"
-        >
-          Install App
-        </button>
-      </div>
+      )}
 
       {/* Classical High-End Quick Status Strip */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="p-2.5 rounded-xl bg-white border border-neutral-200/80 shadow-2xs text-center">
-          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
+        <Link
+          href="/student/attendance"
+          className="p-2.5 rounded-xl bg-white border border-neutral-200/80 hover:border-neutral-400 shadow-2xs text-center transition-all cursor-pointer block group active:scale-[0.98]"
+        >
+          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider group-hover:text-neutral-600">
             Attendance
           </span>
           <span
@@ -194,25 +244,34 @@ export default function StudentHomePage() {
           >
             {isPresent ? '✓ Marked' : 'Pending'}
           </span>
-        </div>
+        </Link>
 
-        <div className="p-2.5 rounded-xl bg-white border border-neutral-200/80 shadow-2xs text-center">
-          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
+        {/* Clickable Documents Card / Button */}
+        <Link
+          href="/student/notifications?tab=documents"
+          className="p-2.5 rounded-xl bg-white border border-neutral-200/80 hover:border-neutral-950 hover:bg-neutral-50 shadow-2xs text-center transition-all cursor-pointer block group active:scale-[0.98] relative"
+          title="Click to view all summit documents & notifications"
+        >
+          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider group-hover:text-neutral-900">
             Documents
           </span>
-          <span className="text-xs font-bold text-neutral-900 inline-block mt-0.5">
-            {announcements.length} Available
+          <span className="text-xs font-bold text-neutral-900 inline-flex items-center justify-center gap-1 mt-0.5">
+            <span>{announcements.length} Available</span>
+            <span className="text-[9px] text-neutral-400 group-hover:text-neutral-950 group-hover:translate-x-0.5 transition-all">→</span>
           </span>
-        </div>
+        </Link>
 
-        <div className="p-2.5 rounded-xl bg-white border border-neutral-200/80 shadow-2xs text-center">
-          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
+        <Link
+          href="/student/gallery"
+          className="p-2.5 rounded-xl bg-white border border-neutral-200/80 hover:border-neutral-400 shadow-2xs text-center transition-all cursor-pointer block group active:scale-[0.98]"
+        >
+          <span className="text-[10px] uppercase font-bold text-neutral-400 block tracking-wider group-hover:text-neutral-600">
             My Photos
           </span>
           <span className="text-xs font-bold text-neutral-900 inline-block mt-0.5">
             {myPhotoCount} Shared
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Live Action Requests / Dynamic Rooms */}
@@ -249,9 +308,13 @@ export default function StudentHomePage() {
           <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
             Information & Documents
           </span>
-          <span className="text-[10px] text-neutral-400 font-mono">
-            {announcements.length} Updates
-          </span>
+          <Link
+            href="/student/notifications"
+            className="text-xs font-semibold text-neutral-900 hover:text-neutral-600 inline-flex items-center gap-1 transition-colors group cursor-pointer"
+          >
+            <span>See more notifications</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
 
         {announcements.length === 0 ? (
@@ -350,6 +413,19 @@ export default function StudentHomePage() {
                 )}
               </Card>
             ))}
+
+            {announcements.length > 2 && (
+              <Link href="/student/notifications" className="block pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs gap-1.5 border-neutral-200 hover:bg-neutral-50 font-semibold cursor-pointer py-2"
+                >
+                  <span>See all {announcements.length} notifications</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            )}
           </div>
         )}
       </div>
@@ -405,7 +481,7 @@ export default function StudentHomePage() {
               <div className="flex items-center justify-between">
                 <GalleryIcon className="w-4 h-4 text-neutral-700" />
                 <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-900 border border-neutral-200">
-                  {myPhotoCount} shared
+                  {myPhotoCount > 0 ? `${myPhotoCount} shared` : totalPhotoCount > 0 ? `${totalPhotoCount} photos` : 'Explore'}
                 </span>
               </div>
               <p className="text-xs font-bold text-neutral-900">Sangam Memories</p>

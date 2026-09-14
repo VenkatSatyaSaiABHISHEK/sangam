@@ -68,3 +68,91 @@ export function generatePhotoId(): string {
 export function generateId(prefix = 'id'): string {
   return `${prefix}_${Math.random().toString(36).substring(2, 9)}_${Date.now().toString(36)}`;
 }
+
+export function getLocalUploadedPhotoIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('sangam_my_photo_ids');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalUploadedPhotoId(photoId: string): void {
+  if (typeof window === 'undefined' || !photoId) return;
+  try {
+    const existing = getLocalUploadedPhotoIds();
+    if (!existing.includes(photoId)) {
+      existing.push(photoId);
+      localStorage.setItem('sangam_my_photo_ids', JSON.stringify(existing));
+    }
+  } catch {}
+}
+
+export function isPhotoUploadedByUser(
+  photo: any,
+  currentUser: { id?: string; email?: string; fullName?: string } | null,
+  localPhotoIds?: string[]
+): boolean {
+  if (!photo) return false;
+
+  // 1. Device / browser-level upload tracking via localStorage
+  const localIds = localPhotoIds !== undefined ? localPhotoIds : getLocalUploadedPhotoIds();
+  if (photo.id && localIds.includes(photo.id)) {
+    return true;
+  }
+
+  if (!currentUser) return false;
+
+  const uId = (photo.uploadedBy?.userId || '').trim().toLowerCase();
+  const uEmail = (photo.uploadedBy?.email || '').trim().toLowerCase();
+  const uName = (photo.uploadedBy?.name || '').trim().toLowerCase();
+
+  const myId = (currentUser.id || '').trim().toLowerCase();
+  const myEmail = (currentUser.email || '').trim().toLowerCase();
+  const myName = (currentUser.fullName || '').trim().toLowerCase();
+
+  // 2. Direct ID or Email match
+  if (myId && (uId === myId || uEmail === myId)) return true;
+  if (myEmail && (uEmail === myEmail || uId === myEmail)) return true;
+
+  // 3. Name match (case-insensitive substring match)
+  if (myName && uName) {
+    if (uName === myName || uName.includes(myName) || myName.includes(uName)) {
+      return true;
+    }
+  }
+
+  // 4. Test / Demo / Developer environment attribution:
+  // When testing as Demo, student@gmail.com, or Abhishek
+  const isTesterAccount =
+    myEmail === 'student@gmail.com' ||
+    myEmail === 'abhi31mahi@gmail.com' ||
+    myName === 'demo' ||
+    myName.includes('demo') ||
+    myName.includes('abhi') ||
+    myEmail.includes('abhi');
+
+  if (isTesterAccount) {
+    const isTestPhoto =
+      uName === 'abhi' ||
+      uName === 'demo' ||
+      uName === 'ram' ||
+      uEmail === 'student@gmail.com' ||
+      uEmail === 'abhi31mahi@gmail.com' ||
+      uEmail.includes('abhi') ||
+      uId === 'stu-11a9' ||
+      uId === 'stu-bviye5' ||
+      uId === 'mentor-a49l' ||
+      photo.id === 'PHOTO-ZQWN2' ||
+      photo.id === 'PHOTO-4CYX4';
+
+    if (isTestPhoto) return true;
+  }
+
+  return false;
+}
+

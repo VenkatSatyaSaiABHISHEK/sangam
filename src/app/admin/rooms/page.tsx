@@ -17,6 +17,8 @@ import {
   Eye,
   ExternalLink,
   Trash2,
+  Pause,
+  Play,
 } from 'lucide-react';
 import { getCachedData, setCachedData } from '@/lib/data-cache';
 
@@ -87,6 +89,31 @@ export default function AdminRoomsPage() {
       showToast('Room Deleted', `Room "${roomTitle}" has been removed.`, 'info');
     } catch (err: any) {
       showToast('Delete Failed', err.message || 'Could not delete room.', 'error');
+    }
+  };
+
+  const handleTogglePauseRoom = async (roomId: string, currentlyActive: boolean, roomTitle: string) => {
+    try {
+      const res = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggleRoomActive', payload: { id: roomId } }),
+      });
+      if (!res.ok) throw new Error('Failed to toggle room active status');
+
+      const nextActive = !currentlyActive;
+      const updated = rooms.map((r) => (r.id === roomId ? { ...r, isActive: nextActive } : r));
+      setRooms(updated);
+      setCachedData({ ...cached, rooms: updated });
+      showToast(
+        nextActive ? 'Room Resumed' : 'Room Paused',
+        nextActive
+          ? `Room "${roomTitle}" is now live and accepting submissions.`
+          : `Room "${roomTitle}" is paused. Submissions are temporarily closed.`,
+        nextActive ? 'success' : 'info'
+      );
+    } catch (err: any) {
+      showToast('Action Failed', err.message || 'Could not update room status.', 'error');
     }
   };
 
@@ -163,10 +190,31 @@ export default function AdminRoomsPage() {
               <Card key={room.id} className="flex flex-col justify-between hover:border-neutral-300 transition-colors p-5 space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge variant={categoryColors[room.category] || 'neutral'} size="sm" className="capitalize">
-                      {room.category}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant={categoryColors[room.category] || 'neutral'} size="sm" className="capitalize">
+                        {room.category}
+                      </Badge>
+                      <Badge
+                        variant={room.isActive !== false ? 'success' : 'warning'}
+                        size="sm"
+                        className="text-[10px]"
+                      >
+                        {room.isActive !== false ? '● Active' : '⏸ Paused'}
+                      </Badge>
+                    </div>
                     <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePauseRoom(room.id, room.isActive !== false, room.title)}
+                        className={`p-1 rounded transition-colors cursor-pointer ${
+                          room.isActive !== false
+                            ? 'text-neutral-500 hover:text-amber-600 hover:bg-amber-50'
+                            : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                        }`}
+                        title={room.isActive !== false ? 'Pause Room Submissions' : 'Resume Room'}
+                      >
+                        {room.isActive !== false ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      </button>
                       <span className="text-[11px] font-mono text-neutral-400 font-semibold">
                         #{room.id}
                       </span>

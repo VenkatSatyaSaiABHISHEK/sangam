@@ -428,6 +428,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, room });
       }
 
+      case 'toggleRoomActive': {
+        const isActive = db.toggleRoomActive(payload.id);
+        const room = db.getRoomById(payload.id);
+        if (room) {
+          saveRoomToFirestore(room).catch((e) => console.warn('Firestore sync toggleRoomActive:', e));
+          return NextResponse.json({ success: true, isActive, room });
+        }
+        return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      }
+
       case 'deleteRoom': {
         const ok = db.deleteRoom(payload.id);
         deleteRoomFromFirestore(payload.id).catch((e) => console.warn('Firestore delete room:', e));

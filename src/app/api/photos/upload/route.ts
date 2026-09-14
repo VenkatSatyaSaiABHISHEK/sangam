@@ -13,13 +13,14 @@ export async function POST(req: NextRequest) {
     const metaStr = formData.get('metadata') as string | null;
     const metadata = metaStr ? JSON.parse(metaStr) : {};
 
-    const uploadedByUser = metadata.uploadedBy || {
-      userId: 'guest',
-      name: 'Participant',
-      role: 'student' as UserRole,
-      teamId: undefined,
-      teamName: undefined,
-      mentorName: undefined,
+    const uploadedByUser = {
+      userId: metadata.uploadedBy?.userId || 'guest',
+      name: metadata.uploadedBy?.name || 'Participant',
+      email: metadata.uploadedBy?.email || undefined,
+      role: (metadata.uploadedBy?.role || 'student') as UserRole,
+      teamId: metadata.uploadedBy?.teamId || undefined,
+      teamName: metadata.uploadedBy?.teamName || undefined,
+      mentorName: metadata.uploadedBy?.mentorName || undefined,
     };
 
     // Allowed image formats

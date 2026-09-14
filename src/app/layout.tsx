@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   title: "SangamConnect — Unified Team, Stream & Event Management",
   description: "Centralized multi-stream management, frictionless participant engagement, dynamic rooms, and verification media platform.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/favicon.png", sizes: "64x64", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

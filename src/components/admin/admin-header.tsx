@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Menu, X } from 'lucide-react';
+import { Plus, Menu, X, Bell } from 'lucide-react';
 import { ADMIN_NAV_ITEMS } from './admin-sidebar';
 
 export function AdminHeader() {
@@ -50,6 +50,14 @@ export function AdminHeader() {
             {user?.email || 'admin@sangamconnect.org'}
           </span>
         </div>
+
+        <Link
+          href="/admin/notifications"
+          className="p-2 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors relative"
+          title="Notifications & Broadcasts"
+        >
+          <Bell className="w-4 h-4" />
+        </Link>
 
         <Link href="/admin/rooms/create">
           <Button size="sm" className="hidden sm:inline-flex gap-1 text-xs cursor-pointer">

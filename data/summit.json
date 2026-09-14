@@ -687,6 +687,16 @@
       "year": "1st Year",
       "status": "active",
       "createdAt": "2026-09-13T08:31:26.942Z"
+    },
+    {
+      "id": "stu-bviye5",
+      "eventId": "summit-2027",
+      "role": "student",
+      "fullName": "Demo",
+      "email": "student@gmail.com",
+      "phone": "+91 999 999 9999",
+      "status": "active",
+      "createdAt": "2026-09-14T15:17:07.203Z"
     }
   ],
   "teams": [
@@ -943,7 +953,7 @@
       ],
       "oneSubmissionPerUser": true,
       "submissionCount": 2,
-      "isActive": true,
+      "isActive": false,
       "createdAt": "2026-09-13T11:14:18.682Z",
       "createdBy": "admin-01"
     }
@@ -1376,7 +1386,8 @@
         "role": "student",
         "teamId": "team-2b8c",
         "teamName": "TEAM 2",
-        "mentorName": "Kavita Rao"
+        "mentorName": "Kavita Rao",
+        "email": "student@gmail.com"
       },
       "originalUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789277540/summitconnect/1789277536025_orig_PHOTO-ZQWN2.png",
       "brandedUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789277542/summitconnect/1789277540598_branded_PHOTO-ZQWN2.jpg",
@@ -1408,7 +1419,8 @@
       "uploadedBy": {
         "userId": "mentor-a49l",
         "name": "RAM",
-        "role": "mentor"
+        "role": "mentor",
+        "email": "student@gmail.com"
       },
       "originalUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789224807/summitconnect/1789224803971_orig_PHOTO-4CYX4.jpg",
       "brandedUrl": "https://res.cloudinary.com/dkk8mi9qv/image/upload/v1789224808/summitconnect/1789224807778_branded_PHOTO-4CYX4.jpg",
@@ -1448,6 +1460,20 @@
     }
   ],
   "activityLogs": [
+    {
+      "id": "act_1789396881471",
+      "eventId": "summit-2027",
+      "actorId": "stu-bviye5",
+      "actorName": "Demo",
+      "actorRole": "student",
+      "action": "USER_LOGIN",
+      "targetEntity": "session",
+      "details": {
+        "email": "student@gmail.com",
+        "role": "student"
+      },
+      "timestamp": "2026-09-14T14:41:21.471Z"
+    },
     {
       "id": "act_1789313371508",
       "eventId": "summit-2027",

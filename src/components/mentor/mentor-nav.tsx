@@ -136,8 +136,8 @@ export function MentorNav() {
         </div>
       </div>
 
-      {/* Mobile nav row */}
-      <div className="flex md:hidden items-center justify-around py-2 border-t border-neutral-100">
+      {/* Mobile nav row: Sleek Horizontal Scrollable Tabs */}
+      <div className="flex md:hidden items-center gap-1.5 overflow-x-auto py-2 px-3 border-t border-neutral-100 no-scrollbar">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -146,19 +146,19 @@ export function MentorNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-1 px-2 py-1 text-[11px] relative',
-                isActive ? 'text-neutral-950 font-semibold' : 'text-neutral-500'
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shrink-0 transition-all cursor-pointer whitespace-nowrap',
+                isActive
+                  ? 'bg-neutral-900 text-white shadow-xs'
+                  : 'text-neutral-600 bg-neutral-100/80 hover:bg-neutral-200/80'
               )}
             >
-              <div className="relative">
-                <Icon className="w-4 h-4" />
-                {item.badge && item.badge > 0 && !isActive ? (
-                  <span className="absolute -top-1.5 -right-2 px-1 min-w-[14px] h-[14px] bg-neutral-950 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                ) : null}
-              </div>
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{item.label}</span>
+              {item.badge && item.badge > 0 && !isActive ? (
+                <span className="ml-0.5 px-1.5 py-0.2 bg-rose-600 text-white text-[9px] font-bold rounded-full">
+                  {item.badge > 9 ? '9+' : item.badge}
+                </span>
+              ) : null}
             </Link>
           );
         })}

@@ -180,6 +180,7 @@ export interface Photo {
   uploadedBy: {
     userId: string;
     name: string;
+    email?: string;
     role: UserRole;
     teamId?: string;
     teamName?: string;

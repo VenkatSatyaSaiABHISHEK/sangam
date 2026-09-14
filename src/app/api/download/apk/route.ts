@@ -19,16 +19,21 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // If pre-compiled APK is not placed in public/downloads yet, redirect to web installer or return helpful package
-    const referer = req.headers.get('referer') || '/';
-    return NextResponse.redirect(new URL('/student?install=pwa', req.url));
+    // If pre-compiled APK is not placed in public/downloads yet, do NOT redirect to HTML which creates corrupt APK
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'APK package not pre-compiled on server. Please use the 1-Tap Home Screen installation which works immediately on all Android & iOS devices.',
+      },
+      { status: 404 }
+    );
   } catch (err: any) {
     console.error('Error serving APK:', err);
     return NextResponse.json(
       {
-        error: 'APK package not generated yet. Use the 1-Tap Home Screen installation which works immediately on all Android & iOS devices.',
+        error: 'APK package unavailable. Use the 1-Tap Home Screen installation.',
       },
-      { status: 404 }
+      { status: 500 }
     );
   }
 }

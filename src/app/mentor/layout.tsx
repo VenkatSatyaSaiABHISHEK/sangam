@@ -4,6 +4,8 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { MentorNav } from '@/components/mentor';
 
+import { cn } from '@/lib/utils';
+
 export default function MentorLayout({
   children,
 }: {
@@ -16,10 +18,24 @@ export default function MentorLayout({
     return <>{children}</>;
   }
 
+  const isChannel = pathname === '/mentor/channel';
+
   return (
-    <div className="min-h-screen bg-neutral-50/50 flex flex-col">
+    <div
+      className={cn(
+        'bg-neutral-50/50 flex flex-col',
+        isChannel ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
+      )}
+    >
       <MentorNav />
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main
+        className={cn(
+          'flex-1 w-full mx-auto flex flex-col min-h-0',
+          isChannel
+            ? 'p-0 sm:p-2 md:p-4 max-w-4xl h-[calc(100dvh-112px)] md:h-[calc(100dvh-64px)] overflow-hidden'
+            : 'max-w-5xl p-4 sm:p-6 lg:p-8'
+        )}
+      >
         {children}
       </main>
     </div>

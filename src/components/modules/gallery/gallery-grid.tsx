@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, isPhotoUploadedByUser, saveLocalUploadedPhotoId } from '@/lib/utils';
 import {
   MapPin,
   ExternalLink,
@@ -80,12 +80,7 @@ export function GalleryGrid({ initialPhotos, teamIdFilter }: GalleryGridProps) {
   }, [selectedFiles]);
 
   // Compute personal uploads & team contributor counts ("who's more photos share the count")
-  const myPhotos = photos.filter(
-    (p) =>
-      p.uploadedBy.userId === user?.id ||
-      (user?.email && p.uploadedBy.userId === user.email) ||
-      (user?.fullName && p.uploadedBy.name.toLowerCase() === user.fullName.toLowerCase())
-  );
+  const myPhotos = photos.filter((p) => isPhotoUploadedByUser(p, user));
 
   const teamCountsMap = new Map<string, { count: number; teamId?: string }>();
   photos.forEach((p) => {
@@ -105,11 +100,7 @@ export function GalleryGrid({ initialPhotos, teamIdFilter }: GalleryGridProps) {
     if (teamIdFilter) return p.uploadedBy.teamId === teamIdFilter;
     if (activeFilter === 'all') return true;
     if (activeFilter === 'my') {
-      return (
-        p.uploadedBy.userId === user?.id ||
-        (user?.email && p.uploadedBy.userId === user.email) ||
-        (user?.fullName && p.uploadedBy.name.toLowerCase() === user.fullName.toLowerCase())
-      );
+      return isPhotoUploadedByUser(p, user);
     }
     return p.uploadedBy.teamId === activeFilter;
   });
@@ -173,6 +164,7 @@ export function GalleryGrid({ initialPhotos, teamIdFilter }: GalleryGridProps) {
           uploadedBy: {
             userId: user?.id || 'guest',
             name: user?.fullName || 'Participant',
+            email: user?.email || '',
             role: user?.role || 'student',
             teamId: user?.teamId,
             teamName: user?.teamName,
@@ -196,6 +188,9 @@ export function GalleryGrid({ initialPhotos, teamIdFilter }: GalleryGridProps) {
       const newlyUploaded: Photo[] = data.photos || [];
 
       if (newlyUploaded.length > 0) {
+        newlyUploaded.forEach((np) => {
+          if (np.id) saveLocalUploadedPhotoId(np.id);
+        });
         setPhotos((prev) => [...newlyUploaded, ...prev]);
       }
 

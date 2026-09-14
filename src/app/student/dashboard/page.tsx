@@ -8,6 +8,7 @@ import { Announcement, Room, AttendanceRecord } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { isPhotoUploadedByUser, getLocalUploadedPhotoIds } from '@/lib/utils';
 import {
   MessageCircle,
   Users,
@@ -37,13 +38,11 @@ export default function StudentDashboardPage() {
       const rec = db.getAttendanceForStudent(user.id);
       if (rec) setAttendance(rec);
     }
+    const localIds = getLocalUploadedPhotoIds();
     const allPhotos = db.getPhotos();
     setTotalPhotoCount(allPhotos.length);
-    const userPhotos = allPhotos.filter(
-      (p) =>
-        p.uploadedBy?.userId === user?.id ||
-        (user?.email && p.uploadedBy?.userId === user.email) ||
-        (user?.fullName && p.uploadedBy?.name?.toLowerCase() === user.fullName.toLowerCase())
+    const userPhotos = allPhotos.filter((p) =>
+      isPhotoUploadedByUser(p, user, localIds)
     );
     setMyPhotoCount(userPhotos.length);
   }, [user]);
