@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/db';
 import { User, Team, Bus } from '@/types';
 import { Card } from '@/components/ui/card';
@@ -27,6 +27,10 @@ import {
   FileSpreadsheet,
   Download,
   ExternalLink,
+  Camera,
+  RefreshCw,
+  Upload,
+  X,
 } from 'lucide-react';
 
 import {
@@ -73,6 +77,16 @@ export default function AdminStudentsPage() {
   const [editYear, setEditYear] = useState('1st Year');
   const [editTeamId, setEditTeamId] = useState('');
   const [editBusId, setEditBusId] = useState('');
+  const [editAvatarUrl, setEditAvatarUrl] = useState('');
+
+  // Camera & Face Capture State
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraFacing, setCameraFacing] = useState<'user' | 'environment'>('user');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const loadData = async () => {
     try {
@@ -171,7 +185,111 @@ export default function AdminStudentsPage() {
     }
   };
 
-  const handleOpenEdit = (student: User) => {
+  const startCamera = async (facing: 'user' | 'environment' = cameraFacing) => {
+    try {
+      stopCamera();
+      setCameraError(null);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError('Camera access is not supported by your browser.');
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: facing,
+          width: { ideal: 640 },
+          height: { ideal: 640 },
+        },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraFacing(facing);
+      setIsCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+    } catch (err: any) {
+      console.error('Camera error:', err);
+      setCameraError('Could not access camera. Please allow camera permission or choose an image file.');
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const toggleCameraFacing = () => {
+    const nextFacing = cameraFacing === 'user' ? 'environment' : 'user';
+    startCamera(nextFacing);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    try {
+      setIsUploadingPhoto(true);
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 640;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        setIsUploadingPhoto(false);
+        return;
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          setIsUploadingPhoto(false);
+          return;
+        }
+        stopCamera();
+        await uploadPhotoBlob(blob, `student_face_${editingStudent?.id || Date.now()}.jpg`);
+      }, 'image/jpeg', 0.92);
+    } catch (err: any) {
+      showToast('Capture Failed', err.message || 'Could not capture photo', 'error');
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const uploadPhotoBlob = async (blob: Blob | File, filename: string) => {
+    try {
+      setIsUploadingPhoto(true);
+      const formData = new FormData();
+      formData.append('file', blob, filename);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Upload to Cloudflare R2 failed');
+      }
+
+      setEditAvatarUrl(data.url);
+      showToast('Photo Uploaded', 'Face photo stored on Cloudflare R2.', 'success');
+    } catch (err: any) {
+      showToast('Upload Error', err.message || 'Could not upload photo', 'error');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadPhotoBlob(file, file.name);
+    }
+  };
+
+  const handleOpenEdit = (student: User, autoStartCamera = false) => {
     setEditingStudent(student);
     setEditName(student.fullName);
     setEditEmail(student.isProvisionalEmail ? '' : student.email);
@@ -180,6 +298,13 @@ export default function AdminStudentsPage() {
     setEditYear(student.year || '1st Year');
     setEditTeamId(student.teamId || '');
     setEditBusId(student.busId || '');
+    setEditAvatarUrl(student.avatarUrl || '');
+    setCameraError(null);
+    if (autoStartCamera) {
+      setTimeout(() => {
+        startCamera('user');
+      }, 350);
+    }
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -202,6 +327,7 @@ export default function AdminStudentsPage() {
               year: editYear.trim(),
               teamId: editTeamId || undefined,
               busId: editBusId || undefined,
+              avatarUrl: editAvatarUrl.trim() || undefined,
             },
           },
         }),
@@ -218,6 +344,7 @@ export default function AdminStudentsPage() {
       }
 
       showToast('Student Updated', `${editName} updated successfully.`, 'success');
+      stopCamera();
       setEditingStudent(null);
       loadData();
     } catch (err: any) {
@@ -418,124 +545,254 @@ export default function AdminStudentsPage() {
           )}
         </Card>
       ) : (
-        <Card className="overflow-hidden border-neutral-200 shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-50/75 border-b border-neutral-200 text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="py-3 px-4">Student</th>
-                  <th className="py-3 px-4">Contact</th>
-                  <th className="py-3 px-4">Assigned Team</th>
-                  <th className="py-3 px-4">Bus Route</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 font-medium">
-                {filteredStudents.map((student) => {
-                  const team = teams.find((t) => t.id === student.teamId);
-                  const bus = buses.find((b) => b.id === student.busId);
+        <div className="space-y-4">
+          {/* Mobile Card View (block md:hidden) */}
+          <div className="block md:hidden space-y-3">
+            {filteredStudents.map((student) => {
+              const team = teams.find((t) => t.id === student.teamId);
+              const bus = buses.find((b) => b.id === student.busId);
 
-                  return (
-                    <tr key={student.id} className="hover:bg-neutral-50/50 transition-colors">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                            {student.fullName.charAt(0)}
-                          </div>
-                          <div>
-                            <span className="font-semibold text-neutral-900 block">
-                              {student.fullName}
-                            </span>
-                            <span className="text-[10px] text-neutral-400 font-mono">
-                              {student.branch || 'CSE'} • {student.year || '1st Year'}
-                            </span>
-                          </div>
+              return (
+                <Card key={student.id} className="p-4 border-neutral-200 shadow-xs space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      {student.avatarUrl ? (
+                        <img
+                          src={student.avatarUrl}
+                          alt={student.fullName}
+                          className="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-neutral-200"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                          {student.fullName.charAt(0)}
                         </div>
-                      </td>
-
-                      <td className="py-3 px-4 text-neutral-600">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-1.5">
-                            <Mail className="w-3 h-3 text-neutral-400 shrink-0" />
-                            {student.isProvisionalEmail ? (
-                              <span className="inline-flex items-center text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                Pending Email
-                              </span>
-                            ) : (
-                              <span>{student.email}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                            <Phone className="w-3 h-3 text-neutral-400 shrink-0" />
-                            <span>{student.phone}</span>
-                          </div>
+                      )}
+                      <div>
+                        <div className="font-semibold text-neutral-900 text-sm">{student.fullName}</div>
+                        <div className="text-[11px] text-neutral-500 font-mono">
+                          {student.branch || 'CSE'} • {student.year || '1st Year'}
                         </div>
-                      </td>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={student.status === 'active' ? 'success' : 'neutral'}
+                      size="sm"
+                    >
+                      {student.status}
+                    </Badge>
+                  </div>
 
-                      <td className="py-3 px-4">
-                        {team ? (
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: team.color || '#2563EB' }}
-                            />
-                            <span className="font-semibold text-neutral-800">{team.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-neutral-400 italic">Unassigned</span>
-                        )}
-                      </td>
+                  <div className="space-y-1 text-xs text-neutral-600 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                      {student.isProvisionalEmail ? (
+                        <span className="inline-flex items-center text-[10px] text-amber-700 bg-amber-100/60 px-1.5 py-0.5 rounded border border-amber-200 font-medium">
+                          Pending Email (Temp ID)
+                        </span>
+                      ) : (
+                        <span className="truncate">{student.email}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                      <Phone className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                      <span>{student.phone}</span>
+                    </div>
+                  </div>
 
-                      <td className="py-3 px-4">
-                        {bus ? (
-                          <div className="flex items-center gap-1.5 text-neutral-700">
-                            <BusIcon className="w-3.5 h-3.5 text-neutral-400" />
-                            <span>{bus.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-neutral-400 italic">None</span>
-                        )}
-                      </td>
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {team ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-neutral-100 text-neutral-800 font-medium text-[11px]">
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: team.color || '#2563EB' }}
+                        />
+                        {team.name}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400 text-[11px] italic">No Team</span>
+                    )}
 
-                      <td className="py-3 px-4">
-                        <Badge
-                          variant={student.status === 'active' ? 'success' : 'neutral'}
-                          size="sm"
-                        >
-                          {student.status}
-                        </Badge>
-                      </td>
+                    {bus ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-[11px] font-medium border border-blue-100">
+                        <BusIcon className="w-3 h-3 text-blue-500" />
+                        {bus.name}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400 text-[11px] italic">No Bus</span>
+                    )}
+                  </div>
 
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenEdit(student)}
-                            className="p-1.5 h-auto text-neutral-500 hover:text-black cursor-pointer"
-                            title="Edit Student"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(student)}
-                            className="p-1.5 h-auto text-neutral-500 hover:text-red-600 cursor-pointer"
-                            title="Delete Student"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEdit(student, true)}
+                      className="gap-1 text-xs h-8 px-2.5 text-neutral-700 hover:text-blue-700 hover:border-blue-300"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Photo</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEdit(student, false)}
+                      className="gap-1 text-xs h-8 px-2.5 text-neutral-700 hover:text-black hover:border-neutral-400"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(student)}
+                      className="gap-1 text-xs h-8 px-2.5 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
-        </Card>
+
+          {/* Desktop Table View (hidden md:block) */}
+          <Card className="hidden md:block overflow-hidden border-neutral-200 shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-neutral-50/75 border-b border-neutral-200 text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="py-3 px-4">Student</th>
+                    <th className="py-3 px-4">Contact</th>
+                    <th className="py-3 px-4">Assigned Team</th>
+                    <th className="py-3 px-4">Bus Route</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100 font-medium">
+                  {filteredStudents.map((student) => {
+                    const team = teams.find((t) => t.id === student.teamId);
+                    const bus = buses.find((b) => b.id === student.busId);
+
+                    return (
+                      <tr key={student.id} className="hover:bg-neutral-50/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            {student.avatarUrl ? (
+                              <img
+                                src={student.avatarUrl}
+                                alt={student.fullName}
+                                className="w-8 h-8 rounded-full object-cover shrink-0 border border-neutral-200"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                {student.fullName.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-semibold text-neutral-900 block">
+                                {student.fullName}
+                              </span>
+                              <span className="text-[10px] text-neutral-400 font-mono">
+                                {student.branch || 'CSE'} • {student.year || '1st Year'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-4 text-neutral-600">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="w-3 h-3 text-neutral-400 shrink-0" />
+                              {student.isProvisionalEmail ? (
+                                <span className="inline-flex items-center text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                  Pending Email
+                                </span>
+                              ) : (
+                                <span>{student.email}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                              <Phone className="w-3 h-3 text-neutral-400 shrink-0" />
+                              <span>{student.phone}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-4">
+                          {team ? (
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: team.color || '#2563EB' }}
+                              />
+                              <span className="font-semibold text-neutral-800">{team.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-neutral-400 italic">Unassigned</span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4">
+                          {bus ? (
+                            <div className="flex items-center gap-1.5 text-neutral-700">
+                              <BusIcon className="w-3.5 h-3.5 text-neutral-400" />
+                              <span>{bus.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-neutral-400 italic">None</span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4">
+                          <Badge
+                            variant={student.status === 'active' ? 'success' : 'neutral'}
+                            size="sm"
+                          >
+                            {student.status}
+                          </Badge>
+                        </td>
+
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEdit(student, true)}
+                              className="p-1.5 h-auto text-neutral-500 hover:text-blue-600 cursor-pointer"
+                              title="Update Photo / Camera"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEdit(student, false)}
+                              className="p-1.5 h-auto text-neutral-500 hover:text-black cursor-pointer"
+                              title="Edit Student"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(student)}
+                              className="p-1.5 h-auto text-neutral-500 hover:text-red-600 cursor-pointer"
+                              title="Delete Student"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Add Student Modal */}
@@ -672,11 +929,170 @@ export default function AdminStudentsPage() {
       {/* Edit Student Modal */}
       <Modal
         isOpen={!!editingStudent}
-        onClose={() => setEditingStudent(null)}
+        onClose={() => {
+          stopCamera();
+          setEditingStudent(null);
+        }}
         title="Edit Student Profile"
-        description="Update participant contact details, team assignment, or transit bus allocation."
+        description="Update participant face photo, contact details, team assignment, or bus allocation."
       >
         <form onSubmit={handleSaveEdit} className="space-y-4 pt-2">
+          {/* Hidden File Input for Image Upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileInputChange}
+          />
+
+          {/* Student Face Photo Section (Cloudflare R2) */}
+          <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-neutral-800">
+                Student Face Photo <span className="text-neutral-400 font-normal">(Cloudflare R2)</span>
+              </span>
+              {editAvatarUrl && (
+                <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Photo Stored
+                </span>
+              )}
+            </div>
+
+            {cameraError && (
+              <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center justify-between">
+                <span>{cameraError}</span>
+                <button
+                  type="button"
+                  onClick={() => setCameraError(null)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {isCameraActive ? (
+              <div className="space-y-2">
+                <div className="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                  {isUploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 text-white text-xs z-10">
+                      <RefreshCw className="w-6 h-6 animate-spin text-white" />
+                      <span>Saving face photo to Cloudflare R2...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleCameraFacing}
+                    disabled={isUploadingPhoto}
+                    className="text-xs gap-1.5 h-8 px-2.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Flip ({cameraFacing === 'user' ? 'Front' : 'Back'})</span>
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={stopCamera}
+                      disabled={isUploadingPhoto}
+                      className="text-xs h-8 px-2.5"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={capturePhoto}
+                      disabled={isUploadingPhoto}
+                      className="text-xs gap-1.5 h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Take Photo</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="relative w-16 h-16 rounded-full overflow-hidden bg-neutral-200 border-2 border-white shadow-sm shrink-0 flex items-center justify-center">
+                  {editAvatarUrl ? (
+                    <img
+                      src={editAvatarUrl}
+                      alt="Student Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Camera className="w-6 h-6 text-neutral-400" />
+                  )}
+                  {isUploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <RefreshCw className="w-5 h-5 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startCamera('user')}
+                      disabled={isUploadingPhoto}
+                      className="text-xs gap-1.5 h-8 px-2.5 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 cursor-pointer"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Open Camera</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingPhoto}
+                      className="text-xs gap-1.5 h-8 px-2.5 bg-white cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-neutral-500" />
+                      <span>Upload File</span>
+                    </Button>
+
+                    {editAvatarUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditAvatarUrl('')}
+                        disabled={isUploadingPhoto}
+                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 h-8 px-2 cursor-pointer"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-neutral-500">
+                    Capture student face via device camera or upload image. Stored on Cloudflare R2.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Full Name *
@@ -690,9 +1106,21 @@ export default function AdminStudentsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1">
-              Email Address <span className="text-neutral-400 font-normal">(Optional)</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-neutral-700">
+                Email Address
+              </label>
+              {editingStudent?.isProvisionalEmail && (
+                <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                  Temporary ID Assigned
+                </span>
+              )}
+            </div>
+            {editingStudent?.isProvisionalEmail && (
+              <div className="mb-2 p-2 bg-amber-50/80 border border-amber-200 rounded-lg text-[11px] text-amber-900 leading-relaxed">
+                <strong>Pending Email:</strong> This student currently has a provisional placeholder ({editingStudent.email}). Entering a real email will update their summit account and credentials.
+              </div>
+            )}
             <Input
               type="email"
               value={editEmail}
@@ -785,7 +1213,10 @@ export default function AdminStudentsPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setEditingStudent(null)}
+              onClick={() => {
+                stopCamera();
+                setEditingStudent(null);
+              }}
               className="text-xs cursor-pointer"
             >
               Cancel

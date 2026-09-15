@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadDocumentFile } from '@/lib/storage';
+import { uploadImageFile, uploadDocumentFile } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -23,11 +23,15 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadDocumentFile(buffer, file.name, file.type);
+    const isImage = file.type.startsWith('image/');
+    const result = isImage
+      ? await uploadImageFile(buffer, file.name, file.type)
+      : await uploadDocumentFile(buffer, file.name, file.type);
 
     return NextResponse.json({
       success: true,
       url: result.url,
+      key: result.key,
       fileName: file.name,
       sizeBytes: result.sizeBytes,
     });

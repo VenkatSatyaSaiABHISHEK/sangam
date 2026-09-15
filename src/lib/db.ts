@@ -521,10 +521,14 @@ class PersistentDatabase {
 
   updateStudent(
     id: string,
-    updates: Partial<Pick<User, 'fullName' | 'email' | 'phone' | 'teamId' | 'busId' | 'branch' | 'year' | 'isProvisionalEmail'>>
+    updates: Partial<Pick<User, 'fullName' | 'email' | 'phone' | 'teamId' | 'busId' | 'branch' | 'year' | 'isProvisionalEmail' | 'avatarUrl'>>
   ): User | undefined {
     const student = this.getUserById(id);
     if (!student) return undefined;
+
+    if (updates.avatarUrl !== undefined) {
+      student.avatarUrl = updates.avatarUrl ? updates.avatarUrl.trim() : undefined;
+    }
 
     if (updates.fullName) student.fullName = updates.fullName.trim();
     if (updates.email) {

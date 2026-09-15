@@ -3,7 +3,24 @@ import path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-// Configure Cloudinary if credentials exist
+// Configure Cloudflare R2 (Primary Storage)
+const r2AccessKey = process.env.R2_ACCESS_KEY_ID?.trim().replace(/^["']|["']$/g, '');
+const r2SecretKey = process.env.R2_SECRET_ACCESS_KEY?.trim().replace(/^["']|["']$/g, '');
+const r2Bucket = process.env.R2_BUCKET_NAME?.trim().replace(/^["']|["']$/g, '') || 'vs-game';
+const r2Endpoint =
+  process.env.R2_ENDPOINT?.trim().replace(/^["']|["']$/g, '') ||
+  (process.env.R2_ACCOUNT_ID
+    ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+    : undefined);
+const r2PublicPrefix = (
+  process.env.R2_PUBLIC_URL_PREFIX ||
+  process.env.R2_PUBLIC_DOMAIN ||
+  ''
+).trim().replace(/^["']|["']$/g, '');
+
+const r2Configured = Boolean(r2AccessKey && r2SecretKey && r2Bucket && r2Endpoint);
+
+// Configure Cloudinary (Secondary Backup Storage)
 const cloudinaryConfigured = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_API_KEY &&
@@ -32,7 +49,43 @@ export async function uploadImageFile(
 ): Promise<UploadResult> {
   const safeFilename = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
-  // 1. Primary: Cloudinary Live CDN Upload
+  // 1. PRIMARY: Cloudflare R2 (Ultra-fast, zero-egress S3 compatible storage)
+  if (r2Configured) {
+    try {
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint: r2Endpoint!,
+        credentials: {
+          accessKeyId: r2AccessKey!,
+          secretAccessKey: r2SecretKey!,
+        },
+      });
+
+      const key = `photos/${safeFilename}`;
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: r2Bucket,
+          Key: key,
+          Body: buffer,
+          ContentType: mimeType,
+        })
+      );
+
+      const publicUrl = r2PublicPrefix
+        ? `${r2PublicPrefix.replace(/\/$/, '')}/${key}`
+        : `${r2Endpoint!.replace(/\/$/, '')}/${r2Bucket}/${key}`;
+
+      return {
+        url: publicUrl,
+        key,
+        sizeBytes: buffer.length,
+      };
+    } catch (err) {
+      console.error('Cloudflare R2 primary upload failed, falling back to Cloudinary:', err);
+    }
+  }
+
+  // 2. SECONDARY BACKUP: Cloudinary Live CDN Upload
   if (cloudinaryConfigured) {
     try {
       const uploadPromise = new Promise<UploadResult>((resolve, reject) => {
@@ -59,53 +112,11 @@ export async function uploadImageFile(
       const res = await uploadPromise;
       return res;
     } catch (err) {
-      console.error('Cloudinary upload error, checking fallback options:', err);
+      console.error('Cloudinary backup upload error, falling back to local storage:', err);
     }
   }
 
-  // 2. Secondary: Cloudflare R2 / S3
-  const r2AccountId = process.env.R2_ACCOUNT_ID;
-  const r2AccessKey = process.env.R2_ACCESS_KEY_ID;
-  const r2SecretKey = process.env.R2_SECRET_ACCESS_KEY;
-  const r2Bucket = process.env.R2_BUCKET_NAME;
-  const r2PublicDomain = process.env.R2_PUBLIC_DOMAIN;
-
-  if (r2AccountId && r2AccessKey && r2SecretKey && r2Bucket) {
-    try {
-      const s3 = new S3Client({
-        region: 'auto',
-        endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
-        credentials: {
-          accessKeyId: r2AccessKey,
-          secretAccessKey: r2SecretKey,
-        },
-      });
-
-      const key = `photos/${safeFilename}`;
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: r2Bucket,
-          Key: key,
-          Body: buffer,
-          ContentType: mimeType,
-        })
-      );
-
-      const publicUrl = r2PublicDomain
-        ? `${r2PublicDomain.replace(/\/$/, '')}/${key}`
-        : `https://${r2Bucket}.${r2AccountId}.r2.cloudflarestorage.com/${key}`;
-
-      return {
-        url: publicUrl,
-        key,
-        sizeBytes: buffer.length,
-      };
-    } catch (err) {
-      console.error('Cloudflare R2 upload error, falling back to persistent local storage:', err);
-    }
-  }
-
-  // 3. Fallback: Persistent local disk driver (public/uploads/)
+  // 3. TERTIARY FALLBACK: Persistent local disk driver (public/uploads/)
   const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -129,9 +140,44 @@ export async function uploadDocumentFile(
 ): Promise<UploadResult> {
   const safeFilename = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
-  // For files larger than 10MB, store directly to persistent disk to prevent Cloudinary payload timeouts
-  const isLargeFile = buffer.length > 10 * 1024 * 1024;
+  // 1. PRIMARY: Cloudflare R2
+  if (r2Configured) {
+    try {
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint: r2Endpoint!,
+        credentials: {
+          accessKeyId: r2AccessKey!,
+          secretAccessKey: r2SecretKey!,
+        },
+      });
 
+      const key = `documents/${safeFilename}`;
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: r2Bucket,
+          Key: key,
+          Body: buffer,
+          ContentType: mimeType,
+        })
+      );
+
+      const publicUrl = r2PublicPrefix
+        ? `${r2PublicPrefix.replace(/\/$/, '')}/${key}`
+        : `${r2Endpoint!.replace(/\/$/, '')}/${r2Bucket}/${key}`;
+
+      return {
+        url: publicUrl,
+        key,
+        sizeBytes: buffer.length,
+      };
+    } catch (err) {
+      console.warn('Cloudflare R2 document upload error, attempting fallback:', err);
+    }
+  }
+
+  // 2. SECONDARY: Cloudinary (for files <= 10MB)
+  const isLargeFile = buffer.length > 10 * 1024 * 1024;
   if (cloudinaryConfigured && !isLargeFile) {
     try {
       const uploadPromise = new Promise<UploadResult>((resolve, reject) => {
@@ -164,7 +210,7 @@ export async function uploadDocumentFile(
     }
   }
 
-  // 2. High-speed local filesystem storage in public/uploads/ (supports up to 100MB+)
+  // 3. TERTIARY: Local filesystem storage in public/uploads/
   const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -179,4 +225,5 @@ export async function uploadDocumentFile(
     sizeBytes: buffer.length,
   };
 }
+
 
