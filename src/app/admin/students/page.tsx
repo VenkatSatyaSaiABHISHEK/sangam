@@ -117,10 +117,12 @@ export default function AdminStudentsPage() {
       try {
         const firestoreStudents = await fetchUsersFromFirestore('student');
         if (firestoreStudents && firestoreStudents.length > 0) {
-          const map = new Map<string, User>();
-          apiStudents.forEach((s) => map.set(s.id, s));
-          firestoreStudents.forEach((s) => map.set(s.id, { ...map.get(s.id), ...s }));
-          apiStudents = Array.from(map.values());
+          const localMap = new Map<string, User>(apiStudents.map((s) => [s.id, s]));
+          apiStudents = firestoreStudents.map((fs) => ({
+            ...localMap.get(fs.id),
+            ...fs,
+            avatarUrl: fs.avatarUrl || localMap.get(fs.id)?.avatarUrl,
+          }));
         }
       } catch {
         // Fallback gracefully
@@ -463,11 +465,40 @@ export default function AdminStudentsPage() {
 
   const handleDelete = async (student: User) => {
     if (confirm(`Are you sure you want to delete ${student.fullName}?`)) {
+      // 1. Instant optimistic UI removal
+      setStudents((prev) => prev.filter((s) => s.id !== student.id));
+      setTeams((prev) =>
+        prev.map((t) => ({
+          ...t,
+          studentIds: (t.studentIds || []).filter((id) => id !== student.id),
+        }))
+      );
+
+      // 2. Cache sync
+      const c = getCachedData();
+      if (c) {
+        const updatedStudents = (c.students || []).filter((s: User) => s.id !== student.id);
+        const updatedTeams = (c.teams || []).map((t: Team) => ({
+          ...t,
+          studentIds: (t.studentIds || []).filter((id: string) => id !== student.id),
+        }));
+        setCachedData({ ...c, students: updatedStudents, teams: updatedTeams });
+      }
+
+      // 3. Direct Firestore delete
       try {
-        const { deleteUserFromFirestore } = await import('@/lib/firebase-db');
+        const { deleteUserFromFirestore, saveTeamToFirestore } = await import('@/lib/firebase-db');
         deleteUserFromFirestore(student.id).catch(() => {});
+        const affectedTeams = teams.filter((t) => t.studentIds?.includes(student.id));
+        affectedTeams.forEach((t) => {
+          saveTeamToFirestore({
+            ...t,
+            studentIds: (t.studentIds || []).filter((id) => id !== student.id),
+          }).catch(() => {});
+        });
       } catch {}
 
+      // 4. API request
       try {
         const res = await fetch('/api/data', {
           method: 'POST',
@@ -482,6 +513,7 @@ export default function AdminStudentsPage() {
         loadData();
       } catch (err: any) {
         showToast('Delete Failed', err.message || 'Could not delete student.', 'error');
+        loadData();
       }
     }
   };

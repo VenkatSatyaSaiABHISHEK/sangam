@@ -237,22 +237,6 @@
       "updatedAt": "2026-09-13T08:46:27.382Z",
       "teamId": "team-hsmf",
       "teamName": "Team 9"
-    },
-    {
-      "id": "stu-1q4eqo",
-      "eventId": "summit-2027",
-      "role": "student",
-      "fullName": "DEVARAPALLI JYOTHI MANIKANTA",
-      "email": "9573502848@student.sangam.org",
-      "isProvisionalEmail": true,
-      "phone": "9573502848",
-      "teamId": "team-9qya",
-      "teamName": "Team 1",
-      "branch": "CSE",
-      "year": "1st Year",
-      "status": "active",
-      "createdAt": "2026-09-13T08:31:26.846Z"
-    },
     {
       "id": "stu-1q4i1t",
       "eventId": "summit-2027",
@@ -722,7 +706,6 @@
         }
       ],
       "studentIds": [
-        "stu-1q4eqo",
         "stu-1q4i1t",
         "stu-1q4ke7"
       ],
@@ -985,19 +968,6 @@
     }
   ],
   "attendance": [
-    {
-      "id": "att-stu-1q4eqo",
-      "sessionId": "session-main",
-      "eventId": "summit-2027",
-      "studentId": "stu-1q4eqo",
-      "studentName": "DEVARAPALLI JYOTHI MANIKANTA",
-      "teamId": "team-9qya",
-      "teamName": "Team 1",
-      "status": "present",
-      "verifiedBy": "room:test-room-99",
-      "verifiedAt": "2026-09-13T17:13:23.272Z",
-      "method": "dynamic_room"
-    },
     {
       "id": "att-stu-1q4i1t",
       "sessionId": "session-main",

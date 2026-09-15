@@ -151,25 +151,39 @@ export default function AdminTeamsPage() {
         ]);
 
         if (fsTeams && fsTeams.length > 0) {
-          const map = new Map<string, Team>();
-          apiTeams.forEach((t) => map.set(t.id, t));
-          fsTeams.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
-          apiTeams = Array.from(map.values());
+          const localMap = new Map<string, Team>(apiTeams.map((t) => [t.id, t]));
+          apiTeams = fsTeams.map((ft) => ({
+            ...localMap.get(ft.id),
+            ...ft,
+            studentIds: ft.studentIds || [],
+            mentorIds: ft.mentorIds || [],
+            mentors: ft.mentors || [],
+          }));
         }
 
         if (fsMentors && fsMentors.length > 0) {
-          const map = new Map<string, User>();
-          apiMentors.forEach((m) => map.set(m.id, m));
-          fsMentors.forEach((m) => map.set(m.id, { ...map.get(m.id), ...m }));
-          apiMentors = Array.from(map.values());
+          const localMap = new Map<string, User>(apiMentors.map((m) => [m.id, m]));
+          apiMentors = fsMentors.map((fm) => ({
+            ...localMap.get(fm.id),
+            ...fm,
+            avatarUrl: fm.avatarUrl || localMap.get(fm.id)?.avatarUrl,
+          }));
         }
 
         if (fsStudents && fsStudents.length > 0) {
-          const map = new Map<string, User>();
-          apiStudents.forEach((s) => map.set(s.id, s));
-          fsStudents.forEach((s) => map.set(s.id, { ...map.get(s.id), ...s }));
-          apiStudents = Array.from(map.values());
+          const localMap = new Map<string, User>(apiStudents.map((s) => [s.id, s]));
+          apiStudents = fsStudents.map((fs) => ({
+            ...localMap.get(fs.id),
+            ...fs,
+            avatarUrl: fs.avatarUrl || localMap.get(fs.id)?.avatarUrl,
+          }));
         }
+
+        const validStudentIdSet = new Set(apiStudents.map((s) => s.id));
+        apiTeams = apiTeams.map((t) => ({
+          ...t,
+          studentIds: (t.studentIds || []).filter((id) => validStudentIdSet.has(id)),
+        }));
       } catch (err) {
         console.warn('Firestore fallback sync in AdminTeamsPage:', err);
       }
@@ -207,7 +221,7 @@ export default function AdminTeamsPage() {
 
     return sorted.filter((t) => {
       const teamMentors = mentors.filter((m) => m.teamId === t.id || t.mentorIds?.includes(m.id));
-      const teamStudents = students.filter((s) => s.teamId === t.id || t.studentIds?.includes(s.id));
+      const teamStudents = students.filter((s) => (t.studentIds || []).includes(s.id));
 
       const matchesName = t.name.toLowerCase().includes(q);
       const matchesTable = t.tableNumber?.toLowerCase().includes(q);
@@ -351,7 +365,7 @@ export default function AdminTeamsPage() {
     ? mentors.filter((m) => m.teamId === currentEditTeam.id || currentEditTeam.mentorIds?.includes(m.id))
     : [];
   const currentEditStudents = currentEditTeam
-    ? students.filter((s) => s.teamId === currentEditTeam.id || currentEditTeam.studentIds?.includes(s.id))
+    ? students.filter((s) => (currentEditTeam.studentIds || []).includes(s.id))
     : [];
 
   // Assign Student
@@ -359,26 +373,150 @@ export default function AdminTeamsPage() {
     e.preventDefault();
     if (!currentEditTeam || !assignStudentId) return;
 
+    const studentToAssign = assignStudentId;
+    const targetTeamId = currentEditTeam.id;
+    const targetTeamName = currentEditTeam.name;
+
+    // 1. Instant optimistic UI update
+    setTeams((prev) =>
+      prev.map((t) => {
+        if (t.id === targetTeamId) {
+          return {
+            ...t,
+            studentIds: Array.from(new Set([...(t.studentIds || []), studentToAssign])),
+          };
+        }
+        return t;
+      })
+    );
+
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === studentToAssign
+          ? { ...s, teamId: targetTeamId, teamName: targetTeamName }
+          : s
+      )
+    );
+
+    // 2. Cache sync
+    const c = getCachedData();
+    if (c) {
+      const updatedTeams = (c.teams || []).map((t: Team) =>
+        t.id === targetTeamId
+          ? { ...t, studentIds: Array.from(new Set([...(t.studentIds || []), studentToAssign])) }
+          : t
+      );
+      const updatedStudents = (c.students || []).map((s: User) =>
+        s.id === studentToAssign
+          ? { ...s, teamId: targetTeamId, teamName: targetTeamName }
+          : s
+      );
+      setCachedData({ ...c, teams: updatedTeams, students: updatedStudents });
+    }
+
+    // 3. Direct Firestore sync from client
+    try {
+      const { saveTeamToFirestore, saveUserToFirestore } = await import('@/lib/firebase-db');
+      const teamObj = teams.find((t) => t.id === targetTeamId);
+      if (teamObj) {
+        saveTeamToFirestore({
+          ...teamObj,
+          studentIds: Array.from(new Set([...(teamObj.studentIds || []), studentToAssign])),
+        }).catch(() => {});
+      }
+      const studentObj = students.find((s) => s.id === studentToAssign);
+      if (studentObj) {
+        saveUserToFirestore({
+          ...studentObj,
+          teamId: targetTeamId,
+          teamName: targetTeamName,
+        }).catch(() => {});
+      }
+    } catch {}
+
+    setAssignStudentId('');
+
+    // 4. API mutation
     try {
       const res = await fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'assignStudentToTeam',
-          payload: { teamId: currentEditTeam.id, studentId: assignStudentId },
+          payload: { teamId: targetTeamId, studentId: studentToAssign },
         }),
       });
       if (!res.ok) throw new Error('Failed to assign student');
       showToast('Student Assigned', 'Participant assigned to team cohort.', 'success');
-      setAssignStudentId('');
       loadData();
     } catch (err: any) {
       showToast('Error', err.message || 'Could not assign student.', 'error');
+      loadData();
     }
   };
 
   // Remove Student
   const handleRemoveStudent = async (teamId: string, studentId: string) => {
+    // 1. Instant optimistic UI update
+    setTeams((prev) =>
+      prev.map((t) => {
+        if (t.id === teamId) {
+          return {
+            ...t,
+            studentIds: (t.studentIds || []).filter((id) => id !== studentId),
+          };
+        }
+        return t;
+      })
+    );
+
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === studentId
+          ? { ...s, teamId: undefined, teamName: undefined, mentorId: undefined, mentorName: undefined }
+          : s
+      )
+    );
+
+    // 2. Cache sync
+    const c = getCachedData();
+    if (c) {
+      const updatedTeams = (c.teams || []).map((t: Team) =>
+        t.id === teamId
+          ? { ...t, studentIds: (t.studentIds || []).filter((id: string) => id !== studentId) }
+          : t
+      );
+      const updatedStudents = (c.students || []).map((s: User) =>
+        s.id === studentId
+          ? { ...s, teamId: undefined, teamName: undefined, mentorId: undefined, mentorName: undefined }
+          : s
+      );
+      setCachedData({ ...c, teams: updatedTeams, students: updatedStudents });
+    }
+
+    // 3. Direct Firestore sync from client
+    try {
+      const { saveTeamToFirestore, saveUserToFirestore } = await import('@/lib/firebase-db');
+      const teamObj = teams.find((t) => t.id === teamId);
+      if (teamObj) {
+        saveTeamToFirestore({
+          ...teamObj,
+          studentIds: (teamObj.studentIds || []).filter((id) => id !== studentId),
+        }).catch(() => {});
+      }
+      const studentObj = students.find((s) => s.id === studentId);
+      if (studentObj) {
+        saveUserToFirestore({
+          ...studentObj,
+          teamId: undefined,
+          teamName: undefined,
+          mentorId: undefined,
+          mentorName: undefined,
+        }).catch(() => {});
+      }
+    } catch {}
+
+    // 4. API mutation
     try {
       await fetch('/api/data', {
         method: 'POST',
@@ -392,6 +530,7 @@ export default function AdminTeamsPage() {
       loadData();
     } catch (err: any) {
       showToast('Error', err.message || 'Could not remove student.', 'error');
+      loadData();
     }
   };
 
@@ -681,7 +820,7 @@ export default function AdminTeamsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTeams.map((team) => {
-            const teamStudents = students.filter((s) => s.teamId === team.id || team.studentIds?.includes(s.id));
+            const teamStudents = students.filter((s) => (team.studentIds || []).includes(s.id));
             const teamMentors = mentors.filter((m) => m.teamId === team.id || team.mentorIds?.includes(m.id));
             const bus = buses.find((b) => b.id === team.busId);
 

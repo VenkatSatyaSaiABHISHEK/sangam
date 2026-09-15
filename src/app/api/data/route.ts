@@ -54,50 +54,68 @@ async function assembleFullData(): Promise<any> {
       fetchAttendanceFromFirestore(),
     ]);
 
-    if (fsTeams && fsTeams.length > 0) {
-      const map = new Map<string, any>();
-      allTeams.forEach((t) => map.set(t.id, t));
-      fsTeams.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
-      allTeams = Array.from(map.values());
-    }
-
     if (fsUsers && fsUsers.length > 0) {
-      const sMap = new Map<string, any>();
-      allStudents.forEach((s) => sMap.set(s.id, s));
-      const mMap = new Map<string, any>();
-      allMentors.forEach((m) => mMap.set(m.id, m));
-      const tMap = new Map<string, any>();
-      allTeachers.forEach((t) => tMap.set(t.id, t));
+      const fsStudents = fsUsers.filter((u) => u.role === 'student');
+      const fsMentors = fsUsers.filter((u) => u.role === 'mentor');
+      const fsTeachers = fsUsers.filter((u) => u.role === 'teacher' || u.role === 'faculty' || u.role === 'judge');
 
-      fsUsers.forEach((u) => {
-        if (u.role === 'student') {
-          const existing = sMap.get(u.id);
-          const merged = { ...existing, ...u };
-          if (existing?.avatarUrl && !merged.avatarUrl) {
-            merged.avatarUrl = existing.avatarUrl;
-          }
-          sMap.set(u.id, merged);
-        } else if (u.role === 'mentor') {
-          const existing = mMap.get(u.id);
-          const merged = { ...existing, ...u };
-          if (existing?.avatarUrl && !merged.avatarUrl) {
-            merged.avatarUrl = existing.avatarUrl;
-          }
-          mMap.set(u.id, merged);
-        } else if (u.role === 'teacher') {
-          const existing = tMap.get(u.id);
-          const merged = { ...existing, ...u };
-          if (existing?.avatarUrl && !merged.avatarUrl) {
-            merged.avatarUrl = existing.avatarUrl;
-          }
-          tMap.set(u.id, merged);
-        }
-      });
+      if (fsStudents.length > 0) {
+        const localStudentMap = new Map(allStudents.map((s) => [s.id, s]));
+        allStudents = fsStudents.map((u) => {
+          const local = localStudentMap.get(u.id);
+          return {
+            ...local,
+            ...u,
+            avatarUrl: u.avatarUrl || local?.avatarUrl,
+          };
+        });
+      }
 
-      allStudents = Array.from(sMap.values());
-      allMentors = Array.from(mMap.values());
-      allTeachers = Array.from(tMap.values());
+      if (fsMentors.length > 0) {
+        const localMentorMap = new Map(allMentors.map((m) => [m.id, m]));
+        allMentors = fsMentors.map((u) => {
+          const local = localMentorMap.get(u.id);
+          return {
+            ...local,
+            ...u,
+            avatarUrl: u.avatarUrl || local?.avatarUrl,
+          };
+        });
+      }
+
+      if (fsTeachers.length > 0) {
+        const localTeacherMap = new Map(allTeachers.map((t) => [t.id, t]));
+        allTeachers = fsTeachers.map((u) => {
+          const local = localTeacherMap.get(u.id);
+          return {
+            ...local,
+            ...u,
+            avatarUrl: u.avatarUrl || local?.avatarUrl,
+          };
+        });
+      }
     }
+
+    if (fsTeams && fsTeams.length > 0) {
+      const localTeamMap = new Map(allTeams.map((t) => [t.id, t]));
+      allTeams = fsTeams.map((t) => {
+        const local = localTeamMap.get(t.id);
+        return {
+          ...local,
+          ...t,
+          studentIds: Array.isArray(t.studentIds) ? t.studentIds : (local?.studentIds || []),
+          mentorIds: Array.isArray(t.mentorIds) ? t.mentorIds : (local?.mentorIds || []),
+          mentors: Array.isArray(t.mentors) ? t.mentors : (local?.mentors || []),
+        };
+      });
+    }
+
+    // Clean up any deleted student IDs from teams
+    const activeStudentIds = new Set(allStudents.map((s) => s.id));
+    allTeams = allTeams.map((t) => ({
+      ...t,
+      studentIds: (t.studentIds || []).filter((id) => activeStudentIds.has(id)),
+    }));
 
     if (fsRooms && fsRooms.length > 0) {
       const rMap = new Map<string, any>();
@@ -311,11 +329,23 @@ export async function POST(req: NextRequest) {
       }
 
       case 'deleteStudent': {
-        const ok = db.deleteStudent(payload.id);
+        const studentId = payload.id;
+        const ok = db.deleteStudent(studentId);
         try {
-          await deleteUserFromFirestore(payload.id);
+          await deleteUserFromFirestore(studentId);
+          // Also clean up from any team in Firestore
+          const allFsTeams = await fetchTeamsFromFirestore();
+          const teamsWithStudent = allFsTeams.filter((t) => t.studentIds?.includes(studentId));
+          await Promise.all(
+            teamsWithStudent.map((t) =>
+              saveTeamToFirestore({
+                ...t,
+                studentIds: (t.studentIds || []).filter((id) => id !== studentId),
+              })
+            )
+          );
         } catch (e) {
-          console.warn('Firestore delete student:', e);
+          console.warn('Firestore delete student error:', e);
         }
         return NextResponse.json({ success: ok });
       }
@@ -340,10 +370,6 @@ export async function POST(req: NextRequest) {
               const u = db.getUserById(mId);
               if (u) userPromises.push(saveUserToFirestore(u));
             });
-            (team.studentIds || []).forEach((sId) => {
-              const u = db.getUserById(sId);
-              if (u) userPromises.push(saveUserToFirestore(u));
-            });
             await Promise.all(userPromises);
           } catch (e) {
             console.warn('Firestore sync team update:', e);
@@ -359,14 +385,19 @@ export async function POST(req: NextRequest) {
         if (team && student) {
           const studentIds = Array.from(new Set([...team.studentIds, studentId]));
           const updatedTeam = db.updateTeam(teamId, { studentIds });
-          const updatedStudent = db.getUserById(studentId);
+          student.teamId = teamId;
+          student.teamName = team.name;
+          if (team.mentors && team.mentors[0]) {
+            student.mentorId = team.mentors[0].id;
+            student.mentorName = team.mentors[0].name;
+          }
           try {
             if (updatedTeam) await saveTeamToFirestore(updatedTeam);
-            if (updatedStudent) await saveUserToFirestore(updatedStudent);
+            await saveUserToFirestore(student);
           } catch (e) {
             console.warn('Firestore sync assign student error:', e);
           }
-          return NextResponse.json({ success: true, team: updatedTeam, student: updatedStudent });
+          return NextResponse.json({ success: true, team: updatedTeam, student });
         }
         return NextResponse.json({ error: 'Team or student not found' }, { status: 404 });
       }
@@ -375,16 +406,30 @@ export async function POST(req: NextRequest) {
         const { teamId, studentId } = payload;
         const team = db.getTeamById(teamId);
         if (team) {
-          const studentIds = team.studentIds.filter((id) => id !== studentId);
+          const studentIds = (team.studentIds || []).filter((id) => id !== studentId);
           const updatedTeam = db.updateTeam(teamId, { studentIds });
-          const updatedStudent = db.getUserById(studentId);
+          const student = db.getUserById(studentId);
+          if (student) {
+            student.teamId = undefined;
+            student.teamName = undefined;
+            student.mentorId = undefined;
+            student.mentorName = undefined;
+          }
           try {
             if (updatedTeam) await saveTeamToFirestore(updatedTeam);
-            if (updatedStudent) await saveUserToFirestore(updatedStudent);
+            if (student) {
+              await saveUserToFirestore({
+                ...student,
+                teamId: undefined,
+                teamName: undefined,
+                mentorId: undefined,
+                mentorName: undefined,
+              });
+            }
           } catch (e) {
             console.warn('Firestore sync remove student error:', e);
           }
-          return NextResponse.json({ success: true, team: updatedTeam });
+          return NextResponse.json({ success: true, team: updatedTeam, student });
         }
         return NextResponse.json({ error: 'Team not found' }, { status: 404 });
       }

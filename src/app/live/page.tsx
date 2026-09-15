@@ -182,10 +182,28 @@ export default function LivePage() {
         // Fallback gracefully
       }
 
-      const mergedTeams = mergeById(apiTeams, fireTeams).sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { numeric: true })
-      );
-      const mergedStudents = mergeById(apiStudents, fireStudents);
+      const mergedStudents = fireStudents.length > 0
+        ? fireStudents.map((fs) => {
+            const local = apiStudents.find((s) => s.id === fs.id);
+            return { ...local, ...fs, avatarUrl: fs.avatarUrl || local?.avatarUrl };
+          })
+        : apiStudents;
+
+      const liveStudentIdSet = new Set(mergedStudents.map((s) => s.id));
+
+      const mergedTeams = (fireTeams.length > 0
+        ? fireTeams.map((ft) => {
+            const local = apiTeams.find((t) => t.id === ft.id);
+            return { ...local, ...ft };
+          })
+        : mergeById(apiTeams, fireTeams)
+      )
+        .map((t) => ({
+          ...t,
+          studentIds: (t.studentIds || []).filter((id) => liveStudentIdSet.has(id)),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
       const mergedMentors = mergeById(apiMentors, fireMentors);
       const mergedTeachers = mergeById(apiTeachers, fireTeachers);
       const mergedAttendance = mergeById(apiAttendance, fireAtt);
