@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { formatDateTime } from '@/lib/utils';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import {
   Bell,
   Send,
@@ -205,6 +206,9 @@ export default function AdminNotificationsPage() {
                 rows={4}
                 className="w-full p-2.5 text-xs rounded-lg border border-neutral-200 focus:outline-none focus:ring-1 focus:ring-black bg-white leading-relaxed"
               />
+              <p className="text-[10.5px] text-neutral-400">
+                Supports paragraphs, point-wise lists (<span className="font-mono bg-neutral-100 px-1 py-0.5 rounded text-neutral-600">• </span> or <span className="font-mono bg-neutral-100 px-1 py-0.5 rounded text-neutral-600">1. </span>), and links.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -368,9 +372,10 @@ export default function AdminNotificationsPage() {
                           By: {ann.senderName || 'Command Center'}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-700 leading-relaxed whitespace-pre-line pt-1">
-                        {ann.message}
-                      </p>
+                      <FormattedContent
+                        content={ann.message}
+                        className="text-xs text-neutral-700 leading-relaxed pt-1"
+                      />
 
                       {ann.fileUrl && (
                         <div className="pt-2">

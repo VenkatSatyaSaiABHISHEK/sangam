@@ -8,6 +8,7 @@ import { Team, User, AttendanceRecord, Announcement } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import {
   Users,
   MessageCircle,
@@ -197,7 +198,11 @@ export default function MentorDashboardPage() {
                 <span className="font-semibold text-neutral-900">{ann.title}</span>
                 <span className="text-[10px] text-neutral-400 font-mono">Today</span>
               </div>
-              <p className="text-neutral-600">{ann.message}</p>
+              <FormattedContent
+                content={ann.message}
+                className="text-neutral-600 text-xs"
+                compact
+              />
             </Card>
           ))}
         </div>

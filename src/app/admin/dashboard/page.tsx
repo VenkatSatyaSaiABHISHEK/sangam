@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/lib/utils';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import {
   Users,
   GraduationCap,
@@ -436,7 +437,11 @@ export default function AdminDashboardPage() {
                     {formatDateTime(ann.createdAt)}
                   </span>
                 </div>
-                <p className="text-neutral-600 pl-1">{ann.message}</p>
+                <FormattedContent
+                  content={ann.message}
+                  className="text-neutral-600 pl-1 text-xs"
+                  compact
+                />
               </div>
             )))}
           </div>

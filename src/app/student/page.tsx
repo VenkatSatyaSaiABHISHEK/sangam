@@ -8,6 +8,7 @@ import { Announcement, Room, AttendanceRecord, Team } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import { cn, isPhotoUploadedByUser, getLocalUploadedPhotoIds, saveLocalUploadedPhotoId } from '@/lib/utils';
 import {
   Bell,
@@ -367,12 +368,13 @@ export default function StudentHomePage() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-neutral-950 leading-tight">
+                  <h3 className="text-xs font-bold text-neutral-950 leading-tight mb-1">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-neutral-700 mt-1 leading-relaxed whitespace-pre-wrap">
-                    {item.message}
-                  </p>
+                  <FormattedContent
+                    content={item.message}
+                    className="text-xs text-neutral-700 leading-relaxed"
+                  />
                 </div>
 
                 {/* PDF Document Attachment */}

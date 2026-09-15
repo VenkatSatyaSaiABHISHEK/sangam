@@ -8,6 +8,7 @@ import { Announcement, Room, AttendanceRecord } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import { isPhotoUploadedByUser, getLocalUploadedPhotoIds } from '@/lib/utils';
 import {
   MessageCircle,
@@ -154,9 +155,11 @@ export default function StudentDashboardPage() {
             <span className="text-[10px] text-neutral-500 font-mono">Just Now</span>
           </div>
           <h3 className="font-bold text-xs leading-tight">{latestUrgent.title}</h3>
-          <p className="text-[11px] text-neutral-700 leading-snug">
-            {latestUrgent.message}
-          </p>
+          <FormattedContent
+            content={latestUrgent.message}
+            className="text-[11px] text-neutral-700 leading-relaxed"
+            compact
+          />
         </Card>
       )}
 

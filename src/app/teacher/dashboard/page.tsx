@@ -7,6 +7,7 @@ import { Team, User, Photo, Announcement } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import { Users, GraduationCap, Layers, Image as GalleryIcon, Phone, Mail, FileText, ArrowRight, ExternalLink } from 'lucide-react';
 
 export default function TeacherDashboardPage() {
@@ -234,7 +235,11 @@ export default function TeacherDashboardPage() {
                   </span>
                 </div>
                 <h3 className="text-xs font-bold text-neutral-950">{ann.title}</h3>
-                <p className="text-xs text-neutral-600 line-clamp-2">{ann.message}</p>
+                <FormattedContent
+                  content={ann.message}
+                  className="text-xs text-neutral-600"
+                  compact
+                />
 
                 {ann.fileUrl && (
                   <div className="pt-1">

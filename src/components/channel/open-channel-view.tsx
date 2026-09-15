@@ -28,6 +28,7 @@ import {
 import { sendDevicePushNotification } from '@/lib/push-notifications';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { FormattedContent } from '@/components/ui/formatted-content';
 
 interface OpenChannelViewProps {
   backPath?: string;
@@ -573,9 +574,11 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
                         )}
 
                         {msg.content && (
-                          <p className="leading-relaxed whitespace-pre-wrap text-[12.5px] text-neutral-800 font-normal pr-1">
-                            {msg.content}
-                          </p>
+                          <FormattedContent
+                            content={msg.content}
+                            className="text-[12.5px] text-neutral-800 font-normal pr-1"
+                            compact
+                          />
                         )}
 
                         <div className="text-[9.5px] text-neutral-400 text-right font-mono -mt-0.5 select-none">
@@ -606,9 +609,12 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
                       )}
 
                       {msg.content && (
-                        <p className="leading-relaxed whitespace-pre-wrap text-[12.5px] text-neutral-100 font-normal pr-1">
-                          {msg.content}
-                        </p>
+                        <FormattedContent
+                          content={msg.content}
+                          className="text-[12.5px] text-neutral-100 font-normal pr-1"
+                          isOutgoing
+                          compact
+                        />
                       )}
 
                       <div className="flex items-center justify-end gap-1 text-[9.5px] text-neutral-400 -mt-0.5 font-mono select-none">

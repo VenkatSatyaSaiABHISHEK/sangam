@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FormattedContent } from '@/components/ui/formatted-content';
 import {
   Bell,
   ArrowLeft,
@@ -261,9 +262,10 @@ export default function StudentNotificationsPage() {
                   <h3 className="text-sm font-bold text-neutral-950 leading-snug">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-neutral-700 leading-relaxed whitespace-pre-wrap">
-                    {item.message}
-                  </p>
+                  <FormattedContent
+                    content={item.message}
+                    className="text-xs text-neutral-700 leading-relaxed"
+                  />
                 </div>
 
                 {/* Attached Document / Action Link */}
