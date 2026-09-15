@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { uploadImageFile } from '@/lib/storage';
 import { db } from '@/lib/db';
 import { savePhotoToFirestore } from '@/lib/firebase-db';
+import { invalidateDataCache } from '@/app/api/data/route';
 import { Photo, UserRole } from '@/types';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,37 +37,44 @@ export async function POST(req: NextRequest) {
 
       for (let i = 0; i < batchFiles.length; i++) {
         const file = batchFiles[i];
-
         if (file.size > MAX_SIZE) continue; // Skip oversized
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const photoId = `PHOTO-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${i + 1}`;
-        const mime = file.type || 'image/jpeg';
-        const filename = `${photoId}_${file.name || 'image.jpg'}`;
+        try {
+          const buffer = Buffer.from(await file.arrayBuffer());
+          const photoId = `PHOTO-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${i + 1}`;
+          const mime = file.type || 'image/jpeg';
+          const filename = `${photoId}_${file.name || 'image.jpg'}`;
 
-        const uploadResult = await uploadImageFile(buffer, filename, mime);
+          const uploadResult = await uploadImageFile(buffer, filename, mime);
 
-        const photoRecord: Photo = {
-          id: photoId,
-          eventId: metadata.eventId || 'summit-2027',
-          uploadedBy: uploadedByUser,
-          originalUrl: uploadResult.url,
-          brandedUrl: uploadResult.url,
-          thumbnailUrl: uploadResult.url,
-          dimensions: { width: 1200, height: 800 },
-          sizeBytes: uploadResult.sizeBytes,
-          mimeType: mime,
-          capturedAt: new Date().toISOString(),
-          uploadedAt: new Date().toISOString(),
-          status: 'approved',
-          tags: ['summit2027', uploadedByUser.teamName || 'general', 'upload'],
-          hasWatermark: false,
-          captureType: 'upload',
-        };
+          const photoRecord: Photo = {
+            id: photoId,
+            eventId: metadata.eventId || 'summit-2027',
+            uploadedBy: uploadedByUser,
+            originalUrl: uploadResult.url,
+            brandedUrl: uploadResult.url,
+            thumbnailUrl: uploadResult.url,
+            dimensions: { width: 1200, height: 800 },
+            sizeBytes: uploadResult.sizeBytes,
+            mimeType: mime,
+            capturedAt: new Date().toISOString(),
+            uploadedAt: new Date().toISOString(),
+            status: 'approved',
+            tags: ['summit2027', uploadedByUser.teamName || 'general', 'upload'],
+            hasWatermark: false,
+            captureType: 'upload',
+          };
 
-        db.savePhoto(photoRecord);
-        savePhotoToFirestore(photoRecord).catch(() => {});
-        savedPhotos.push(photoRecord);
+          db.savePhoto(photoRecord);
+          savePhotoToFirestore(photoRecord).catch(() => {});
+          savedPhotos.push(photoRecord);
+        } catch (itemErr) {
+          console.warn(`Error uploading batch photo ${i + 1}:`, itemErr);
+        }
+      }
+
+      if (savedPhotos.length > 0) {
+        invalidateDataCache();
       }
 
       return NextResponse.json({
@@ -133,6 +144,7 @@ export async function POST(req: NextRequest) {
 
     db.savePhoto(photoRecord);
     savePhotoToFirestore(photoRecord).catch(() => {});
+    invalidateDataCache();
 
     return NextResponse.json({
       success: true,

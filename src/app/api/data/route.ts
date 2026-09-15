@@ -22,134 +22,207 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+interface CachedData {
+  timestamp: number;
+  payload: any;
+}
+
+let inFlightDataPromise: Promise<any> | null = null;
+let cachedDataPayload: CachedData | null = null;
+const CACHE_TTL_MS = 2500; // 2.5 second cache window for ultra-high concurrency
+
+export function invalidateDataCache(): void {
+  cachedDataPayload = null;
+  inFlightDataPromise = null;
+}
+
+async function assembleFullData(): Promise<any> {
+  db.reload();
+
+  let allTeams = db.getTeams();
+  let allStudents = db.getStudents();
+  let allMentors = db.getMentors();
+  let allTeachers = db.getTeachers();
+  let allRooms = db.getRooms();
+  let allAttendance = db.getAttendance();
+
+  try {
+    const [fsTeams, fsUsers, fsRooms, fsAttendance] = await Promise.all([
+      fetchTeamsFromFirestore(),
+      fetchUsersFromFirestore(),
+      fetchRoomsFromFirestore(),
+      fetchAttendanceFromFirestore(),
+    ]);
+
+    if (fsTeams && fsTeams.length > 0) {
+      const map = new Map<string, any>();
+      allTeams.forEach((t) => map.set(t.id, t));
+      fsTeams.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
+      allTeams = Array.from(map.values());
+    }
+
+    if (fsUsers && fsUsers.length > 0) {
+      const sMap = new Map<string, any>();
+      allStudents.forEach((s) => sMap.set(s.id, s));
+      const mMap = new Map<string, any>();
+      allMentors.forEach((m) => mMap.set(m.id, m));
+      const tMap = new Map<string, any>();
+      allTeachers.forEach((t) => tMap.set(t.id, t));
+
+      fsUsers.forEach((u) => {
+        if (u.role === 'student') {
+          const existing = sMap.get(u.id);
+          const merged = { ...existing, ...u };
+          if (existing?.avatarUrl && !merged.avatarUrl) {
+            merged.avatarUrl = existing.avatarUrl;
+          }
+          sMap.set(u.id, merged);
+        } else if (u.role === 'mentor') {
+          const existing = mMap.get(u.id);
+          const merged = { ...existing, ...u };
+          if (existing?.avatarUrl && !merged.avatarUrl) {
+            merged.avatarUrl = existing.avatarUrl;
+          }
+          mMap.set(u.id, merged);
+        } else if (u.role === 'teacher') {
+          const existing = tMap.get(u.id);
+          const merged = { ...existing, ...u };
+          if (existing?.avatarUrl && !merged.avatarUrl) {
+            merged.avatarUrl = existing.avatarUrl;
+          }
+          tMap.set(u.id, merged);
+        }
+      });
+
+      allStudents = Array.from(sMap.values());
+      allMentors = Array.from(mMap.values());
+      allTeachers = Array.from(tMap.values());
+    }
+
+    if (fsRooms && fsRooms.length > 0) {
+      const rMap = new Map<string, any>();
+      allRooms.forEach((r) => rMap.set(r.id, r));
+      fsRooms.forEach((r) => rMap.set(r.id, { ...rMap.get(r.id), ...r }));
+      allRooms = Array.from(rMap.values());
+    }
+
+    if (fsAttendance && fsAttendance.length > 0) {
+      const aMap = new Map<string, any>();
+      allAttendance.forEach((a) => aMap.set(a.studentId, a));
+      fsAttendance.forEach((a) => {
+        if (a.studentId) {
+          aMap.set(a.studentId, { ...aMap.get(a.studentId), ...a });
+        }
+      });
+      allAttendance = Array.from(aMap.values());
+    }
+  } catch (e) {
+    console.warn('Firestore cloud sync in GET /api/data:', e);
+  }
+
+  // Ensure every student has an attendance record
+  const existingAttStudentIds = new Set(allAttendance.map((a) => a.studentId));
+  allStudents.forEach((stu) => {
+    if (!existingAttStudentIds.has(stu.id)) {
+      allAttendance.push({
+        id: `att-${stu.id}`,
+        sessionId: 'session-main',
+        eventId: stu.eventId || 'summit-2027',
+        studentId: stu.id,
+        studentName: stu.fullName,
+        teamId: stu.teamId,
+        teamName: stu.teamName,
+        busId: stu.busId,
+        busName: stu.busName,
+        status: 'absent',
+        verifiedBy: 'system',
+        verifiedAt: new Date().toISOString(),
+        method: 'manual_admin',
+      });
+    }
+  });
+
+  const supportMentors = allMentors.filter((m) => m.mentorType === 'support' || !m.teamId);
+  const cohortMentors = allMentors.filter((m) => m.mentorType === 'cohort' && m.teamId);
+
+  return {
+    event: db.getEvent(),
+    students: allStudents,
+    mentors: allMentors,
+    supportMentors,
+    cohortMentors,
+    teachers: allTeachers,
+    teams: allTeams,
+    buses: db.getBuses(),
+    announcements: db.getAnnouncements(),
+    rooms: allRooms,
+    attendance: allAttendance,
+    submissions: db.getSubmissions(),
+    photos: db.getPhotos(),
+    activities: db.getActivityLogs(50),
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
-    db.reload();
     const url = new URL(req.url);
     const includeParam = url.searchParams.get('include');
 
-    let allTeams = db.getTeams();
-    let allStudents = db.getStudents();
-    let allMentors = db.getMentors();
-    let allTeachers = db.getTeachers();
-    let allRooms = db.getRooms();
-    let allAttendance = db.getAttendance();
-
-    try {
-      const [fsTeams, fsUsers, fsRooms, fsAttendance] = await Promise.all([
-        fetchTeamsFromFirestore(),
-        fetchUsersFromFirestore(),
-        fetchRoomsFromFirestore(),
-        fetchAttendanceFromFirestore(),
-      ]);
-
-      if (fsTeams && fsTeams.length > 0) {
-        const map = new Map<string, any>();
-        allTeams.forEach((t) => map.set(t.id, t));
-        fsTeams.forEach((t) => map.set(t.id, { ...map.get(t.id), ...t }));
-        allTeams = Array.from(map.values());
-      }
-
-      if (fsUsers && fsUsers.length > 0) {
-        const sMap = new Map<string, any>();
-        allStudents.forEach((s) => sMap.set(s.id, s));
-        const mMap = new Map<string, any>();
-        allMentors.forEach((m) => mMap.set(m.id, m));
-        const tMap = new Map<string, any>();
-        allTeachers.forEach((t) => tMap.set(t.id, t));
-
-        fsUsers.forEach((u) => {
-          if (u.role === 'student') {
-            const existing = sMap.get(u.id);
-            const merged = { ...existing, ...u };
-            if (existing?.avatarUrl && !merged.avatarUrl) {
-              merged.avatarUrl = existing.avatarUrl;
-            }
-            sMap.set(u.id, merged);
-          } else if (u.role === 'mentor') {
-            const existing = mMap.get(u.id);
-            const merged = { ...existing, ...u };
-            if (existing?.avatarUrl && !merged.avatarUrl) {
-              merged.avatarUrl = existing.avatarUrl;
-            }
-            mMap.set(u.id, merged);
-          } else if (u.role === 'teacher') {
-            const existing = tMap.get(u.id);
-            const merged = { ...existing, ...u };
-            if (existing?.avatarUrl && !merged.avatarUrl) {
-              merged.avatarUrl = existing.avatarUrl;
-            }
-            tMap.set(u.id, merged);
-          }
-        });
-
-        allStudents = Array.from(sMap.values());
-        allMentors = Array.from(mMap.values());
-        allTeachers = Array.from(tMap.values());
-      }
-
-      if (fsRooms && fsRooms.length > 0) {
-        const rMap = new Map<string, any>();
-        allRooms.forEach((r) => rMap.set(r.id, r));
-        fsRooms.forEach((r) => rMap.set(r.id, { ...rMap.get(r.id), ...r }));
-        allRooms = Array.from(rMap.values());
-      }
-
-      if (fsAttendance && fsAttendance.length > 0) {
-        const aMap = new Map<string, any>();
-        allAttendance.forEach((a) => aMap.set(a.studentId, a));
-        fsAttendance.forEach((a) => {
-          if (a.studentId) {
-            aMap.set(a.studentId, { ...aMap.get(a.studentId), ...a });
-          }
-        });
-        allAttendance = Array.from(aMap.values());
-      }
-    } catch (e) {
-      console.warn('Firestore cloud sync in GET /api/data:', e);
+    // 1. ULTRA-FAST PATH for client notification polling: instant in-memory response (0ms)
+    if (includeParam === 'announcements,rooms' || includeParam === 'rooms,announcements') {
+      return NextResponse.json(
+        {
+          announcements: db.getAnnouncements(),
+          rooms: db.getRooms(),
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+          },
+        }
+      );
     }
 
-    // Ensure every student has an attendance record
-    const existingAttStudentIds = new Set(allAttendance.map((a) => a.studentId));
-    allStudents.forEach((stu) => {
-      if (!existingAttStudentIds.has(stu.id)) {
-        allAttendance.push({
-          id: `att-${stu.id}`,
-          sessionId: 'session-main',
-          eventId: stu.eventId || 'summit-2027',
-          studentId: stu.id,
-          studentName: stu.fullName,
-          teamId: stu.teamId,
-          teamName: stu.teamName,
-          busId: stu.busId,
-          busName: stu.busName,
-          status: 'absent',
-          verifiedBy: 'system',
-          verifiedAt: new Date().toISOString(),
-          method: 'manual_admin',
-        });
-      }
-    });
+    // 2. CONCURRENCY COALESCING & SWR CACHING
+    const now = Date.now();
+    let fullData: any;
 
-    const supportMentors = allMentors.filter((m) => m.mentorType === 'support' || !m.teamId);
-    const cohortMentors = allMentors.filter((m) => m.mentorType === 'cohort' && m.teamId);
+    if (cachedDataPayload && now - cachedDataPayload.timestamp < CACHE_TTL_MS) {
+      fullData = cachedDataPayload.payload;
+    } else {
+      if (!inFlightDataPromise) {
+        inFlightDataPromise = assembleFullData()
+          .then((res) => {
+            cachedDataPayload = { timestamp: Date.now(), payload: res };
+            inFlightDataPromise = null;
+            return res;
+          })
+          .catch((err) => {
+            inFlightDataPromise = null;
+            throw err;
+          });
+      }
+      fullData = await inFlightDataPromise;
+    }
 
     if (includeParam) {
       const fields = new Set(includeParam.split(',').map((f) => f.trim().toLowerCase()));
       const partialData: Record<string, any> = {};
 
-      if (fields.has('event')) partialData.event = db.getEvent();
-      if (fields.has('students')) partialData.students = allStudents;
-      if (fields.has('mentors')) partialData.mentors = allMentors;
-      if (fields.has('supportmentors')) partialData.supportMentors = supportMentors;
-      if (fields.has('cohortmentors')) partialData.cohortMentors = cohortMentors;
-      if (fields.has('teachers')) partialData.teachers = allTeachers;
-      if (fields.has('teams')) partialData.teams = allTeams;
-      if (fields.has('buses')) partialData.buses = db.getBuses();
-      if (fields.has('announcements')) partialData.announcements = db.getAnnouncements();
-      if (fields.has('rooms')) partialData.rooms = allRooms;
-      if (fields.has('attendance')) partialData.attendance = allAttendance;
-      if (fields.has('submissions')) partialData.submissions = db.getSubmissions();
+      if (fields.has('event')) partialData.event = fullData.event;
+      if (fields.has('students')) partialData.students = fullData.students;
+      if (fields.has('mentors')) partialData.mentors = fullData.mentors;
+      if (fields.has('supportmentors')) partialData.supportMentors = fullData.supportMentors;
+      if (fields.has('cohortmentors')) partialData.cohortMentors = fullData.cohortMentors;
+      if (fields.has('teachers')) partialData.teachers = fullData.teachers;
+      if (fields.has('teams')) partialData.teams = fullData.teams;
+      if (fields.has('buses')) partialData.buses = fullData.buses;
+      if (fields.has('announcements')) partialData.announcements = fullData.announcements;
+      if (fields.has('rooms')) partialData.rooms = fullData.rooms;
+      if (fields.has('attendance')) partialData.attendance = fullData.attendance;
+      if (fields.has('submissions')) partialData.submissions = fullData.submissions;
+      if (fields.has('photos')) partialData.photos = fullData.photos;
+      if (fields.has('activities')) partialData.activities = fullData.activities;
 
       return NextResponse.json(partialData, {
         headers: {
@@ -158,29 +231,11 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json(
-      {
-        event: db.getEvent(),
-        students: allStudents,
-        mentors: allMentors,
-        supportMentors: supportMentors,
-        cohortMentors: cohortMentors,
-        teachers: allTeachers,
-        teams: allTeams,
-        buses: db.getBuses(),
-        announcements: db.getAnnouncements(),
-        rooms: allRooms,
-        attendance: allAttendance,
-        submissions: db.getSubmissions(),
-        photos: db.getPhotos(),
-        activities: db.getActivityLogs(50),
+    return NextResponse.json(fullData, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
-      {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-      }
-    );
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -191,6 +246,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, payload } = body;
 
+    // Invalidate cached data on any mutation
+    invalidateDataCache();
     db.reload();
 
     switch (action) {

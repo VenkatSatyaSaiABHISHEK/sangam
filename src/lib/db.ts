@@ -73,6 +73,9 @@ interface DatabaseSchema {
 
 class PersistentDatabase {
   private data: DatabaseSchema;
+  private writeTimer: NodeJS.Timeout | null = null;
+  private isWriting = false;
+  private pendingWrite = false;
 
   constructor() {
     this.data = this.loadFromFile();
@@ -173,21 +176,90 @@ class PersistentDatabase {
     return cleanState;
   }
 
-  private saveToFile(state?: DatabaseSchema): void {
+  private saveToFile(state?: DatabaseSchema, immediate = false): void {
+    if (state) {
+      this.data = state;
+    }
+
+    if (immediate) {
+      if (this.writeTimer) {
+        clearTimeout(this.writeTimer);
+        this.writeTimer = null;
+      }
+      this.flushToDisk();
+      return;
+    }
+
+    // Debounce writes by 250ms: 30 concurrent operations coalesce into 1 atomic disk write
+    if (this.writeTimer) {
+      clearTimeout(this.writeTimer);
+    }
+    this.writeTimer = setTimeout(() => {
+      this.writeTimer = null;
+      this.flushToDisk();
+    }, 250);
+  }
+
+  flushSync(): void {
+    if (this.writeTimer) {
+      clearTimeout(this.writeTimer);
+      this.writeTimer = null;
+    }
+    this.flushToDisk();
+  }
+
+  private flushToDisk(): void {
+    if (this.isWriting) {
+      this.pendingWrite = true;
+      return;
+    }
+
     const nodeFs = getNodeFs();
     const { dataDir, dataFile } = getDataPaths();
     if (!nodeFs || typeof nodeFs.existsSync !== 'function' || !dataDir || !dataFile) return;
+
+    this.isWriting = true;
     try {
       if (!nodeFs.existsSync(dataDir)) {
         nodeFs.mkdirSync(dataDir, { recursive: true });
       }
-      nodeFs.writeFileSync(dataFile, JSON.stringify(state || this.data, null, 2), 'utf-8');
+
+      const serialized = JSON.stringify(this.data, null, 2);
+      const tmpFile = `${dataFile}.${Date.now()}.${Math.random().toString(36).substring(2, 6)}.tmp`;
+
+      // 1. Write to temporary file
+      nodeFs.writeFileSync(tmpFile, serialized, 'utf-8');
+
+      // 2. Atomically rename/replace over target file
+      try {
+        nodeFs.renameSync(tmpFile, dataFile);
+      } catch {
+        // Fallback for Windows if target file is momentarily locked by an active reader
+        try {
+          nodeFs.copyFileSync(tmpFile, dataFile);
+          nodeFs.unlinkSync(tmpFile);
+        } catch {
+          // Keep tmp file; next scheduled flush will retry
+        }
+      }
     } catch (err) {
-      console.error('Error persisting summit database to disk:', err);
+      console.warn('Background database disk flush warning (in-memory state remains intact):', err);
+    } finally {
+      this.isWriting = false;
+      if (this.pendingWrite) {
+        this.pendingWrite = false;
+        setTimeout(() => this.flushToDisk(), 100);
+      }
     }
   }
 
-  reload(): void {
+  reload(force = false): void {
+    // If we have an active in-memory dataset with users and a pending debounce write,
+    // reloading from disk would wipe the pending changes! In-memory is the authoritative source.
+    if (!force && this.data && Array.isArray(this.data.users) && this.data.users.length > 0 && this.writeTimer) {
+      return;
+    }
+
     const nodeFs = getNodeFs();
     const { dataFile } = getDataPaths();
     if (nodeFs && typeof nodeFs.existsSync === 'function' && dataFile && nodeFs.existsSync(dataFile)) {
@@ -202,7 +274,7 @@ class PersistentDatabase {
           return;
         }
       } catch (err) {
-        // read contention fallback
+        // Read contention fallback - keep existing in-memory state intact
       }
     }
     if ((!this.data || !this.data.users || this.data.users.length <= 1) && summitSeedData && Array.isArray((summitSeedData as any).users)) {
@@ -1516,6 +1588,9 @@ class PersistentDatabase {
 
   logActivity(log: ActivityLog): void {
     this.data.activityLogs.unshift(log);
+    if (this.data.activityLogs.length > 100) {
+      this.data.activityLogs = this.data.activityLogs.slice(0, 100);
+    }
     this.saveToFile();
   }
 

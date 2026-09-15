@@ -6,6 +6,7 @@ import {
   saveAttendanceToFirestore,
   saveRoomToFirestore,
 } from '@/lib/firebase-db';
+import { invalidateDataCache } from '@/app/api/data/route';
 import { RoomSubmission } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -109,6 +110,7 @@ export async function POST(
 
     // 1. Save to local disk & check attendance
     const saved = db.submitToRoom(submission);
+    invalidateDataCache();
 
     // 2. Save to Firestore cloud
     saveSubmissionToFirestore(saved).catch((e) =>

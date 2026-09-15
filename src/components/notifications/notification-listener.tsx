@@ -55,9 +55,13 @@ export function NotificationListener() {
     localStorage.setItem('sangam_notif_prompt_dismissed', 'true');
   };
 
-  // 2. Poll for new Announcements and new Rooms periodically (every 10s)
+  // 2. Poll for new Announcements and new Rooms periodically (respects tab visibility)
   useEffect(() => {
     const checkUpdates = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return; // Skip polling when browser tab is inactive/minimized
+      }
+
       try {
         const res = await fetch('/api/data?include=announcements,rooms');
         if (!res.ok) return;
@@ -106,8 +110,19 @@ export function NotificationListener() {
     };
 
     checkUpdates();
-    const interval = setInterval(checkUpdates, 10000);
-    return () => clearInterval(interval);
+    const interval = setInterval(checkUpdates, 15000);
+
+    const onVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        checkUpdates();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   // 3. Listen to live Channel messages

@@ -20,6 +20,25 @@ const r2PublicPrefix = (
 
 const r2Configured = Boolean(r2AccessKey && r2SecretKey && r2Bucket && r2Endpoint);
 
+// Singleton reusable S3 Client for Cloudflare R2 (connection reuse, keep-alive, socket pool)
+let r2ClientInstance: S3Client | null = null;
+
+function getR2Client(): S3Client | null {
+  if (!r2Configured) return null;
+  if (!r2ClientInstance) {
+    r2ClientInstance = new S3Client({
+      region: 'auto',
+      endpoint: r2Endpoint!,
+      credentials: {
+        accessKeyId: r2AccessKey!,
+        secretAccessKey: r2SecretKey!,
+      },
+      maxAttempts: 3,
+    });
+  }
+  return r2ClientInstance;
+}
+
 // Configure Cloudinary (Secondary Backup Storage)
 const cloudinaryConfigured = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
@@ -52,14 +71,8 @@ export async function uploadImageFile(
   // 1. PRIMARY: Cloudflare R2 (Ultra-fast, zero-egress S3 compatible storage)
   if (r2Configured) {
     try {
-      const s3 = new S3Client({
-        region: 'auto',
-        endpoint: r2Endpoint!,
-        credentials: {
-          accessKeyId: r2AccessKey!,
-          secretAccessKey: r2SecretKey!,
-        },
-      });
+      const s3 = getR2Client();
+      if (!s3) throw new Error('R2 client not initialized');
 
       const key = `photos/${safeFilename}`;
       await s3.send(
@@ -143,14 +156,8 @@ export async function uploadDocumentFile(
   // 1. PRIMARY: Cloudflare R2
   if (r2Configured) {
     try {
-      const s3 = new S3Client({
-        region: 'auto',
-        endpoint: r2Endpoint!,
-        credentials: {
-          accessKeyId: r2AccessKey!,
-          secretAccessKey: r2SecretKey!,
-        },
-      });
+      const s3 = getR2Client();
+      if (!s3) throw new Error('R2 client not initialized');
 
       const key = `documents/${safeFilename}`;
       await s3.send(
