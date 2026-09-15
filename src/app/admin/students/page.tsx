@@ -31,6 +31,8 @@ import {
   RefreshCw,
   Upload,
   X,
+  Play,
+  Video,
 } from 'lucide-react';
 
 import {
@@ -81,6 +83,10 @@ export default function AdminStudentsPage() {
 
   // Camera & Face Capture State
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
+  const [isStreamPlaying, setIsStreamPlaying] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCameraIndex, setSelectedCameraIndex] = useState(0);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [cameraFacing, setCameraFacing] = useState<'user' | 'environment'>('user');
@@ -186,86 +192,108 @@ export default function AdminStudentsPage() {
     }
   };
 
-  const attachVideoStream = (videoEl: HTMLVideoElement | null) => {
-    videoRef.current = videoEl;
-    if (videoEl && streamRef.current) {
-      if (videoEl.srcObject !== streamRef.current) {
-        videoEl.srcObject = streamRef.current;
-      }
-      videoEl.play().catch(() => {});
-    }
-  };
+  // Camera stream attachment and playback listener
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !activeStream) return;
 
-  const startCamera = async (facing: 'user' | 'environment' = cameraFacing) => {
+    video.srcObject = activeStream;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('muted', 'true');
+    video.setAttribute('autoplay', 'true');
+
+    const handlePlaying = () => {
+      setIsStreamPlaying(true);
+    };
+
+    video.addEventListener('playing', handlePlaying);
+    video.addEventListener('loadedmetadata', () => {
+      video.play().catch(() => {});
+    });
+
+    video.play().then(() => {
+      setIsStreamPlaying(true);
+    }).catch((err) => {
+      console.warn('Video auto-play was prevented by browser:', err);
+    });
+
+    return () => {
+      video.removeEventListener('playing', handlePlaying);
+    };
+  }, [activeStream]);
+
+  const startCamera = async (targetDeviceId?: string) => {
     try {
       stopCamera();
       setCameraError(null);
+      setIsStreamPlaying(false);
 
-      // Check if secure context (HTTPS or localhost)
-      const isSecure = typeof window !== 'undefined' && (
-        window.isSecureContext ||
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1'
-      );
-
-      if (!isSecure && !navigator.mediaDevices?.getUserMedia) {
-        setCameraError('Live browser webcam requires HTTPS or localhost. Tap "Device Camera" below to take a photo using your phone\'s camera.');
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError('Live browser camera not supported. Tap "Snap Photo" below to take a photo.');
         nativeCameraInputRef.current?.click();
         return;
       }
 
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError('Live camera not supported by this browser. Tap "Device Camera" below to take a photo.');
-        nativeCameraInputRef.current?.click();
-        return;
+      // Check available video devices
+      let devices: MediaDeviceInfo[] = [];
+      try {
+        const all = await navigator.mediaDevices.enumerateDevices();
+        devices = all.filter((d) => d.kind === 'videoinput');
+        setAvailableCameras(devices);
+      } catch {}
+
+      // Build video constraint
+      let videoConstraints: MediaTrackConstraints | boolean = true;
+      if (targetDeviceId) {
+        videoConstraints = { deviceId: { exact: targetDeviceId } };
+      } else if (devices.length > 0 && selectedCameraIndex < devices.length && devices[selectedCameraIndex]?.deviceId) {
+        videoConstraints = { deviceId: { exact: devices[selectedCameraIndex].deviceId } };
+      } else {
+        videoConstraints = true;
       }
 
       let stream: MediaStream | null = null;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: facing },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
+          video: videoConstraints,
           audio: false,
         });
       } catch (err1) {
-        console.warn('Constrained getUserMedia failed, retrying simple video:', err1);
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facing },
-            audio: false,
-          });
-        } catch (err2) {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false,
-          });
-        }
+        console.warn('Camera with constraints failed, trying fallback video: true', err1);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
       }
+
+      // Re-enumerate to get labeled camera names after permission granted
+      try {
+        const all = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = all.filter((d) => d.kind === 'videoinput');
+        if (videoInputs.length > 0) {
+          setAvailableCameras(videoInputs);
+        }
+      } catch {}
 
       streamRef.current = stream;
-      setCameraFacing(facing);
+      setActiveStream(stream);
       setIsCameraActive(true);
-
-      // If video ref is already attached
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
-      }
     } catch (err: any) {
       console.error('Camera access error:', err);
       setIsCameraActive(false);
+      setActiveStream(null);
 
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setCameraError('Camera permission was blocked by your browser. Please tap the lock/tune icon in your browser address bar to allow camera, or tap "Device Camera" below.');
+        setCameraError('Camera permission was blocked by your browser. Tap the lock icon in your address bar to allow camera, or tap "Snap Photo" below.');
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setCameraError('No camera found on this device. You can upload an image file or tap "Device Camera".');
+        setCameraError('No camera found on this device. You can upload an image file or tap "Snap Photo".');
       } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        setCameraError('Camera is currently in use by another app. Please close other camera apps and retry.');
+        setCameraError('Camera is currently in use by another app (e.g. Zoom, Teams). Please close other camera apps and retry.');
       } else {
-        setCameraError(err.message || 'Could not access camera. Please allow permission or tap "Device Camera".');
+        setCameraError(err.message || 'Could not access camera. Please tap "Snap Photo" below.');
       }
     }
   };
@@ -275,12 +303,25 @@ export default function AdminStudentsPage() {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
+    if (activeStream) {
+      activeStream.getTracks().forEach((t) => t.stop());
+    }
+    setActiveStream(null);
     setIsCameraActive(false);
+    setIsStreamPlaying(false);
   };
 
-  const toggleCameraFacing = () => {
-    const nextFacing = cameraFacing === 'user' ? 'environment' : 'user';
-    startCamera(nextFacing);
+  const switchCamera = () => {
+    if (availableCameras.length > 1) {
+      const nextIndex = (selectedCameraIndex + 1) % availableCameras.length;
+      setSelectedCameraIndex(nextIndex);
+      const nextDevice = availableCameras[nextIndex];
+      startCamera(nextDevice.deviceId);
+    } else {
+      const nextFacing = cameraFacing === 'user' ? 'environment' : 'user';
+      setCameraFacing(nextFacing);
+      startCamera();
+    }
   };
 
   const capturePhoto = () => {
@@ -1065,36 +1106,68 @@ export default function AdminStudentsPage() {
 
             {isCameraActive ? (
               <div className="space-y-2">
-                <div className="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+                <div className="relative rounded-xl overflow-hidden bg-neutral-950 w-full h-64 sm:h-72 border border-neutral-800 shadow-inner">
                   <video
-                    ref={attachVideoStream}
+                    ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    onLoadedMetadata={(e) => {
-                      (e.target as HTMLVideoElement).play().catch(() => {});
-                    }}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover block"
                   />
+
+                  {/* If stream is loaded but video play was prevented */}
+                  {!isStreamPlaying && !isUploadingPhoto && (
+                    <div
+                      onClick={() => videoRef.current?.play().catch(() => {})}
+                      className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 text-white text-xs cursor-pointer p-4 text-center z-10"
+                    >
+                      <Play className="w-8 h-8 text-white animate-pulse" />
+                      <span className="font-semibold">Tap here to show video preview</span>
+                      <span className="text-[11px] text-neutral-300">Browser paused auto-playback</span>
+                    </div>
+                  )}
+
                   {isUploadingPhoto && (
-                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 text-white text-xs z-10">
+                    <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-2 text-white text-xs z-20">
                       <RefreshCw className="w-6 h-6 animate-spin text-white" />
                       <span>Saving face photo to Cloudflare R2...</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-2">
+                {/* Helpful hardware privacy reminder */}
+                <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-lg text-[11px] text-amber-900 leading-snug space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5 text-amber-950">
+                    <span>💡 If camera indicator light is ON but screen is black:</span>
+                  </div>
+                  <p>
+                    1. <strong>Physical Slider:</strong> Check if your laptop has a physical plastic privacy shutter over the camera lens.
+                  </p>
+                  <p>
+                    2. <strong>Camera Key:</strong> Check your keyboard for a privacy toggle hotkey (e.g. <code>Fn + F8/F10</code>).
+                  </p>
+                  {availableCameras.length > 1 && (
+                    <p>
+                      3. <strong>Multiple Webcams:</strong> You have {availableCameras.length} cameras detected. Tap <strong>Switch Cam</strong> below to try another camera source.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={toggleCameraFacing}
+                    onClick={switchCamera}
                     disabled={isUploadingPhoto}
-                    className="text-xs gap-1.5 h-8 px-2.5"
+                    className="text-xs gap-1.5 h-8 px-2.5 bg-white hover:bg-neutral-100 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Flip ({cameraFacing === 'user' ? 'Front' : 'Back'})</span>
+                    <span>
+                      {availableCameras.length > 1
+                        ? `Switch Cam (${selectedCameraIndex + 1}/${availableCameras.length})`
+                        : `Flip (${cameraFacing === 'user' ? 'Front' : 'Back'})`}
+                    </span>
                   </Button>
 
                   <div className="flex items-center gap-2">
@@ -1104,7 +1177,7 @@ export default function AdminStudentsPage() {
                       size="sm"
                       onClick={stopCamera}
                       disabled={isUploadingPhoto}
-                      className="text-xs h-8 px-2.5"
+                      className="text-xs h-8 px-2.5 cursor-pointer"
                     >
                       Cancel
                     </Button>
@@ -1113,7 +1186,7 @@ export default function AdminStudentsPage() {
                       size="sm"
                       onClick={capturePhoto}
                       disabled={isUploadingPhoto}
-                      className="text-xs gap-1.5 h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white"
+                      className="text-xs gap-1.5 h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white font-medium cursor-pointer"
                     >
                       <Camera className="w-3.5 h-3.5" />
                       <span>Take Photo</span>
