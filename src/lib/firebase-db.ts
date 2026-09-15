@@ -267,6 +267,33 @@ export async function fetchAttendanceFromFirestore(): Promise<AttendanceRecord[]
   }
 }
 
+export function subscribeToAttendance(
+  callback: (records: AttendanceRecord[]) => void
+): () => void {
+  if (!isFirestoreReady() || !dbFirestore) {
+    return () => {};
+  }
+  try {
+    const colRef = collection(dbFirestore, ATTENDANCE_COL);
+    const unsubscribe = onSnapshot(
+      colRef,
+      (snap) => {
+        const records: AttendanceRecord[] = [];
+        snap.forEach((d) => records.push(d.data() as AttendanceRecord));
+        callback(records);
+      },
+      (err) => {
+        console.warn('[Firestore Error] Attendance listener error:', err);
+      }
+    );
+    return unsubscribe;
+  } catch (err) {
+    console.warn('[Firestore] Failed to attach attendance listener:', err);
+    return () => {};
+  }
+}
+
+
 // ----------------- ROOMS -----------------
 export async function saveRoomToFirestore(room: Room): Promise<boolean> {
   if (!isFirestoreReady() || !dbFirestore) return false;

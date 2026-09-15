@@ -12,6 +12,7 @@ import {
   saveAnnouncementToFirestore,
   deleteAnnouncementFromFirestore,
   saveAttendanceToFirestore,
+  fetchAttendanceFromFirestore,
   saveRoomToFirestore,
   deleteRoomFromFirestore,
   fetchRoomsFromFirestore,
@@ -32,12 +33,14 @@ export async function GET(req: NextRequest) {
     let allMentors = db.getMentors();
     let allTeachers = db.getTeachers();
     let allRooms = db.getRooms();
+    let allAttendance = db.getAttendance();
 
     try {
-      const [fsTeams, fsUsers, fsRooms] = await Promise.all([
+      const [fsTeams, fsUsers, fsRooms, fsAttendance] = await Promise.all([
         fetchTeamsFromFirestore(),
         fetchUsersFromFirestore(),
         fetchRoomsFromFirestore(),
+        fetchAttendanceFromFirestore(),
       ]);
 
       if (fsTeams && fsTeams.length > 0) {
@@ -72,9 +75,42 @@ export async function GET(req: NextRequest) {
         fsRooms.forEach((r) => rMap.set(r.id, { ...rMap.get(r.id), ...r }));
         allRooms = Array.from(rMap.values());
       }
+
+      if (fsAttendance && fsAttendance.length > 0) {
+        const aMap = new Map<string, any>();
+        allAttendance.forEach((a) => aMap.set(a.studentId, a));
+        fsAttendance.forEach((a) => {
+          if (a.studentId) {
+            aMap.set(a.studentId, { ...aMap.get(a.studentId), ...a });
+          }
+        });
+        allAttendance = Array.from(aMap.values());
+      }
     } catch (e) {
       console.warn('Firestore cloud sync in GET /api/data:', e);
     }
+
+    // Ensure every student has an attendance record
+    const existingAttStudentIds = new Set(allAttendance.map((a) => a.studentId));
+    allStudents.forEach((stu) => {
+      if (!existingAttStudentIds.has(stu.id)) {
+        allAttendance.push({
+          id: `att-${stu.id}`,
+          sessionId: 'session-main',
+          eventId: stu.eventId || 'summit-2027',
+          studentId: stu.id,
+          studentName: stu.fullName,
+          teamId: stu.teamId,
+          teamName: stu.teamName,
+          busId: stu.busId,
+          busName: stu.busName,
+          status: 'absent',
+          verifiedBy: 'system',
+          verifiedAt: new Date().toISOString(),
+          method: 'manual_admin',
+        });
+      }
+    });
 
     const supportMentors = allMentors.filter((m) => m.mentorType === 'support' || !m.teamId);
     const cohortMentors = allMentors.filter((m) => m.mentorType === 'cohort' && m.teamId);
@@ -93,7 +129,7 @@ export async function GET(req: NextRequest) {
       if (fields.has('buses')) partialData.buses = db.getBuses();
       if (fields.has('announcements')) partialData.announcements = db.getAnnouncements();
       if (fields.has('rooms')) partialData.rooms = allRooms;
-      if (fields.has('attendance')) partialData.attendance = db.getAttendance();
+      if (fields.has('attendance')) partialData.attendance = allAttendance;
       if (fields.has('submissions')) partialData.submissions = db.getSubmissions();
 
       return NextResponse.json(partialData, {
@@ -115,7 +151,7 @@ export async function GET(req: NextRequest) {
         buses: db.getBuses(),
         announcements: db.getAnnouncements(),
         rooms: allRooms,
-        attendance: db.getAttendance(),
+        attendance: allAttendance,
         submissions: db.getSubmissions(),
         photos: db.getPhotos(),
         activities: db.getActivityLogs(50),
@@ -415,10 +451,60 @@ export async function POST(req: NextRequest) {
       }
 
       case 'markAttendance': {
-        const { studentId, status, verifiedBy } = payload;
-        const record = db.markAttendance(studentId, status || 'present', verifiedBy || 'room_submission');
+        const {
+          studentId,
+          status,
+          verifiedBy,
+          studentName,
+          teamId,
+          teamName,
+          busId,
+          busName,
+        } = payload;
+        let record = db.markAttendance(studentId, status || 'present', verifiedBy || 'mentor');
+        if (!record || !record.id) {
+          record = {
+            id: `att-${studentId}`,
+            sessionId: 'session-main',
+            eventId: 'summit-2027',
+            studentId,
+            studentName: studentName || 'Student',
+            teamId,
+            teamName,
+            busId,
+            busName,
+            status: status || 'present',
+            verifiedBy: verifiedBy || 'mentor',
+            verifiedAt: new Date().toISOString(),
+            method: verifiedBy?.startsWith('room:') ? 'dynamic_room' : 'mentor_app',
+          };
+        }
         saveAttendanceToFirestore(record).catch((e) => console.warn('Firestore sync attendance:', e));
         return NextResponse.json({ success: true, record });
+      }
+
+      case 'batchMarkAttendance': {
+        const { studentIds, status, verifiedBy, records: clientRecords } = payload;
+        const targetIds: string[] = studentIds || [];
+        db.batchMarkAttendance(targetIds, status || 'present', verifiedBy || 'mentor');
+        const allAtt = db.getAttendance();
+        const updated = allAtt.filter((a) => targetIds.includes(a.studentId));
+        if (clientRecords && Array.isArray(clientRecords)) {
+          clientRecords.forEach((cr: any) => {
+            if (!updated.some((u) => u.studentId === cr.studentId)) {
+              updated.push({
+                ...cr,
+                status: status || 'present',
+                verifiedBy: verifiedBy || 'mentor',
+                verifiedAt: new Date().toISOString(),
+              });
+            }
+          });
+        }
+        Promise.all(updated.map((rec) => saveAttendanceToFirestore(rec))).catch((e) =>
+          console.warn('Firestore batch attendance sync:', e)
+        );
+        return NextResponse.json({ success: true, count: targetIds.length, records: updated });
       }
 
       case 'createRoom':
