@@ -86,6 +86,7 @@ export default function AdminStudentsPage() {
   const [cameraFacing, setCameraFacing] = useState<'user' | 'environment'>('user');
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nativeCameraInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const loadData = async () => {
@@ -185,33 +186,87 @@ export default function AdminStudentsPage() {
     }
   };
 
+  const attachVideoStream = (videoEl: HTMLVideoElement | null) => {
+    videoRef.current = videoEl;
+    if (videoEl && streamRef.current) {
+      if (videoEl.srcObject !== streamRef.current) {
+        videoEl.srcObject = streamRef.current;
+      }
+      videoEl.play().catch(() => {});
+    }
+  };
+
   const startCamera = async (facing: 'user' | 'environment' = cameraFacing) => {
     try {
       stopCamera();
       setCameraError(null);
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError('Camera access is not supported by your browser.');
+
+      // Check if secure context (HTTPS or localhost)
+      const isSecure = typeof window !== 'undefined' && (
+        window.isSecureContext ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
+      );
+
+      if (!isSecure && !navigator.mediaDevices?.getUserMedia) {
+        setCameraError('Live browser webcam requires HTTPS or localhost. Tap "Device Camera" below to take a photo using your phone\'s camera.');
+        nativeCameraInputRef.current?.click();
         return;
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: facing,
-          width: { ideal: 640 },
-          height: { ideal: 640 },
-        },
-        audio: false,
-      });
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError('Live camera not supported by this browser. Tap "Device Camera" below to take a photo.');
+        nativeCameraInputRef.current?.click();
+        return;
+      }
+
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: facing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (err1) {
+        console.warn('Constrained getUserMedia failed, retrying simple video:', err1);
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facing },
+            audio: false,
+          });
+        } catch (err2) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
+      }
+
       streamRef.current = stream;
       setCameraFacing(facing);
       setIsCameraActive(true);
+
+      // If video ref is already attached
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
       }
     } catch (err: any) {
-      console.error('Camera error:', err);
-      setCameraError('Could not access camera. Please allow camera permission or choose an image file.');
+      console.error('Camera access error:', err);
       setIsCameraActive(false);
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraError('Camera permission was blocked by your browser. Please tap the lock/tune icon in your browser address bar to allow camera, or tap "Device Camera" below.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setCameraError('No camera found on this device. You can upload an image file or tap "Device Camera".');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setCameraError('Camera is currently in use by another app. Please close other camera apps and retry.');
+      } else {
+        setCameraError(err.message || 'Could not access camera. Please allow permission or tap "Device Camera".');
+      }
     }
   };
 
@@ -301,9 +356,22 @@ export default function AdminStudentsPage() {
     setEditAvatarUrl(student.avatarUrl || '');
     setCameraError(null);
     if (autoStartCamera) {
-      setTimeout(() => {
-        startCamera('user');
-      }, 350);
+      const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      const isSecure = typeof window !== 'undefined' && (
+        window.isSecureContext ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
+      );
+
+      if (isMobile && !isSecure) {
+        setTimeout(() => {
+          nativeCameraInputRef.current?.click();
+        }, 300);
+      } else {
+        setTimeout(() => {
+          startCamera('user');
+        }, 350);
+      }
     }
   };
 
@@ -937,6 +1005,16 @@ export default function AdminStudentsPage() {
         description="Update participant face photo, contact details, team assignment, or bus allocation."
       >
         <form onSubmit={handleSaveEdit} className="space-y-4 pt-2">
+          {/* Hidden File Input for Device Native Camera (Opens phone selfie camera directly) */}
+          <input
+            ref={nativeCameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            className="hidden"
+            onChange={handleFileInputChange}
+          />
+
           {/* Hidden File Input for Image Upload */}
           <input
             ref={fileInputRef}
@@ -960,15 +1038,28 @@ export default function AdminStudentsPage() {
             </div>
 
             {cameraError && (
-              <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center justify-between">
-                <span>{cameraError}</span>
-                <button
-                  type="button"
-                  onClick={() => setCameraError(null)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="leading-relaxed">{cameraError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setCameraError(null)}
+                    className="text-amber-500 hover:text-amber-700 shrink-0 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => nativeCameraInputRef.current?.click()}
+                    className="text-xs h-7 gap-1 bg-amber-800 hover:bg-amber-900 text-white cursor-pointer"
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>Open Phone Camera Directly</span>
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -976,10 +1067,13 @@ export default function AdminStudentsPage() {
               <div className="space-y-2">
                 <div className="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
                   <video
-                    ref={videoRef}
+                    ref={attachVideoStream}
                     autoPlay
                     playsInline
                     muted
+                    onLoadedMetadata={(e) => {
+                      (e.target as HTMLVideoElement).play().catch(() => {});
+                    }}
                     className="w-full h-full object-cover"
                   />
                   {isUploadingPhoto && (
@@ -1052,12 +1146,26 @@ export default function AdminStudentsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => startCamera('user')}
+                      onClick={() => nativeCameraInputRef.current?.click()}
                       disabled={isUploadingPhoto}
-                      className="text-xs gap-1.5 h-8 px-2.5 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 cursor-pointer"
+                      className="text-xs gap-1.5 h-8 px-2.5 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300 font-semibold cursor-pointer"
+                      title="Opens your device camera directly to snap a photo"
                     >
                       <Camera className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Open Camera</span>
+                      <span>Snap Photo</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startCamera('user')}
+                      disabled={isUploadingPhoto}
+                      className="text-xs gap-1.5 h-8 px-2.5 bg-white hover:bg-neutral-50 text-neutral-700 cursor-pointer"
+                      title="Starts the live webcam stream"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-neutral-500" />
+                      <span>Live Stream</span>
                     </Button>
 
                     <Button
@@ -1086,7 +1194,7 @@ export default function AdminStudentsPage() {
                     )}
                   </div>
                   <p className="text-[11px] text-neutral-500">
-                    Capture student face via device camera or upload image. Stored on Cloudflare R2.
+                    Use <strong>Snap Photo</strong> on phone or <strong>Live Stream</strong> on desktop. Images are uploaded to Cloudflare R2.
                   </p>
                 </div>
               </div>
