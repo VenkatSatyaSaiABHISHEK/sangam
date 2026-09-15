@@ -74,8 +74,12 @@ export default function MentorTeamsPage() {
                         className="p-3 flex items-center justify-between bg-white text-xs"
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-neutral-100 flex items-center justify-center font-bold text-neutral-700">
-                            {m.fullName.charAt(0)}
+                          <div className="w-7 h-7 rounded-full bg-neutral-100 flex items-center justify-center font-bold text-neutral-700 shrink-0 overflow-hidden">
+                            {m.avatarUrl ? (
+                              <img src={m.avatarUrl} alt={m.fullName} className="w-full h-full object-cover" />
+                            ) : (
+                              m.fullName.charAt(0)
+                            )}
                           </div>
                           <div>
                             <span className="font-semibold text-neutral-900 block">

@@ -299,12 +299,18 @@ export default function AdminMentorsPage() {
               <Card key={mentor.id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center font-bold text-sm shrink-0 ${
-                      isSupport
+                    <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden ${
+                      mentor.avatarUrl
+                        ? 'bg-neutral-100'
+                        : isSupport
                         ? 'bg-gradient-to-tr from-amber-600 to-orange-500'
                         : 'bg-gradient-to-tr from-emerald-600 to-teal-600'
                     }`}>
-                      {mentor.fullName.charAt(0)}
+                      {mentor.avatarUrl ? (
+                        <img src={mentor.avatarUrl} alt={mentor.fullName} className="w-full h-full object-cover" />
+                      ) : (
+                        mentor.fullName.charAt(0)
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-sm text-neutral-950 truncate">

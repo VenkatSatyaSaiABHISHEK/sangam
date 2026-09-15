@@ -103,6 +103,7 @@ export async function saveUserToFirestore(user: User): Promise<boolean> {
       ...user,
       teamId: user.teamId || null,
       teamName: user.teamName || null,
+      avatarUrl: user.avatarUrl || null,
       mentorType: user.mentorType || (user.role === 'mentor' ? (user.teamId ? 'cohort' : 'support') : undefined),
       updatedAt: new Date().toISOString(),
     });

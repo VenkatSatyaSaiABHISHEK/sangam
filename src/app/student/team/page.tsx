@@ -101,8 +101,12 @@ export default function StudentTeamPage() {
           {/* Top Row: User Avatar + Name + Status */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-full bg-white text-neutral-950 flex items-center justify-center font-black text-lg shadow-sm shrink-0">
-                {user?.fullName?.charAt(0) || 'A'}
+              <div className="w-12 h-12 rounded-full bg-white text-neutral-950 flex items-center justify-center font-black text-lg shadow-sm shrink-0 overflow-hidden">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.fullName || 'User'} className="w-full h-full object-cover" />
+                ) : (
+                  user?.fullName?.charAt(0) || 'A'
+                )}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -237,8 +241,12 @@ export default function StudentTeamPage() {
                 {mentors.map((m) => (
                   <Card key={m.id} className="p-3 flex items-center justify-between border-neutral-200">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                        {m.fullName.charAt(0)}
+                      <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                        {m.avatarUrl ? (
+                          <img src={m.avatarUrl} alt={m.fullName} className="w-full h-full object-cover" />
+                        ) : (
+                          m.fullName.charAt(0)
+                        )}
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-xs font-bold text-neutral-900 truncate">
@@ -300,13 +308,17 @@ export default function StudentTeamPage() {
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ${
                             isMe
                               ? 'bg-white text-neutral-950'
                               : 'bg-neutral-100 border border-neutral-300 text-neutral-800'
                           }`}
                         >
-                          {s.fullName.charAt(0)}
+                          {s.avatarUrl ? (
+                            <img src={s.avatarUrl} alt={s.fullName} className="w-full h-full object-cover" />
+                          ) : (
+                            s.fullName.charAt(0)
+                          )}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">

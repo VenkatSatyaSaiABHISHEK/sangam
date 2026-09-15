@@ -318,6 +318,7 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
           : 'Student'),
       senderRole: senderRoleToSave,
       senderEmail: user?.email,
+      senderAvatar: user?.avatarUrl,
       teamName: user?.teamName,
       content: content,
       imageUrl: uploadedImageUrl,
@@ -505,8 +506,10 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
                     {/* Role Gradient Avatar */}
                     <div
                       className={cn(
-                        'w-7 h-7 rounded-full text-white flex items-center justify-center text-[10.5px] font-bold shrink-0 shadow-2xs mt-0.5 select-none',
-                        isMsgAdmin
+                        'w-7 h-7 rounded-full text-white flex items-center justify-center text-[10.5px] font-bold shrink-0 shadow-2xs mt-0.5 select-none overflow-hidden',
+                        msg.senderAvatar
+                          ? 'bg-neutral-100'
+                          : isMsgAdmin
                           ? 'bg-gradient-to-br from-rose-500 to-red-600'
                           : isMsgMentor
                           ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
@@ -515,7 +518,11 @@ export function OpenChannelView({ backPath, userRoleOverride }: OpenChannelViewP
                           : 'bg-gradient-to-br from-sky-500 to-blue-600'
                       )}
                     >
-                      {msg.senderName?.charAt(0).toUpperCase() || 'U'}
+                      {msg.senderAvatar ? (
+                        <img src={msg.senderAvatar} alt={msg.senderName} className="w-full h-full object-cover" />
+                      ) : (
+                        msg.senderName?.charAt(0).toUpperCase() || 'U'
+                      )}
                     </div>
 
                     {/* Message Bubble Column */}

@@ -113,8 +113,12 @@ export function AdminSidebar() {
       <div className="p-3 border-t border-neutral-200 bg-neutral-50/60">
         <div className="flex items-center justify-between p-2 rounded-lg border border-neutral-200 bg-white">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
-              {user?.fullName?.charAt(0) || 'A'}
+            <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.fullName || 'Admin'} className="w-full h-full object-cover" />
+              ) : (
+                user?.fullName?.charAt(0) || 'A'
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-neutral-900 truncate">

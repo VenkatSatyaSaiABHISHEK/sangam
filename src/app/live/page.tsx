@@ -59,10 +59,59 @@ function getAvatarStyle(name?: string, isMentor?: boolean): { bg: string; text: 
   return PASTEL_AVATARS[index];
 }
 
+function MemberAvatar({
+  user,
+  size = 'md',
+  className = '',
+}: {
+  user: { fullName?: string; avatarUrl?: string; role?: string };
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+  className?: string;
+}) {
+  const sizeClasses = {
+    xs: 'w-5 h-5 text-[9px]',
+    sm: 'w-6 h-6 text-[10px]',
+    md: 'w-8 h-8 text-xs',
+    lg: 'w-11 h-11 text-xs',
+  };
+
+  if (user.avatarUrl) {
+    return (
+      <img
+        src={user.avatarUrl}
+        alt={user.fullName || 'Member'}
+        className={`${sizeClasses[size]} rounded-full object-cover shrink-0 border border-neutral-200/80 shadow-2xs ${className}`}
+      />
+    );
+  }
+
+  const isMentor = user.role === 'mentor';
+  const style = getAvatarStyle(user.fullName, isMentor);
+
+  return (
+    <div
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold shrink-0 shadow-2xs ${style.bg} ${style.text} ${className}`}
+    >
+      {getInitials(user.fullName)}
+    </div>
+  );
+}
+
 function mergeById<T extends { id: string }>(a: T[], b: T[]): T[] {
   const map = new Map<string, T>();
   a.forEach((item) => map.set(item.id, item));
-  b.forEach((item) => map.set(item.id, item));
+  b.forEach((item) => {
+    const existing = map.get(item.id);
+    if (existing) {
+      const merged: any = { ...existing, ...item };
+      if ((existing as any).avatarUrl && !merged.avatarUrl) {
+        merged.avatarUrl = (existing as any).avatarUrl;
+      }
+      map.set(item.id, merged);
+    } else {
+      map.set(item.id, item);
+    }
+  });
   return Array.from(map.values());
 }
 
@@ -590,10 +639,7 @@ export default function LivePage() {
                                     }`}
                                   >
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                                      {/* User / Member Icon */}
-                                      <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center shrink-0 shadow-xs">
-                                        <UserIcon className="w-4 h-4 text-white" />
-                                      </div>
+                                      <MemberAvatar user={m} size="md" />
                                       <div className="min-w-0 flex-1">
                                         <span className="text-xs sm:text-sm font-bold text-neutral-900 block leading-tight break-words">
                                           {m.fullName}
@@ -660,10 +706,7 @@ export default function LivePage() {
                                     }`}
                                   >
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                                      {/* User / Member Icon */}
-                                      <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200/80 flex items-center justify-center shrink-0 transition-colors shadow-2xs">
-                                        <UserIcon className="w-4 h-4 text-neutral-600" />
-                                      </div>
+                                      <MemberAvatar user={s} size="md" />
                                       <div className="min-w-0 flex-1">
                                         <span className="text-xs sm:text-sm font-semibold text-neutral-900 block leading-snug break-words group-hover:text-neutral-950">
                                           {s.fullName}
@@ -771,11 +814,7 @@ export default function LivePage() {
                       {/* Top Row: Face / Avatar + Name + Attendance Badge */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${style.bg} ${style.text}`}
-                          >
-                            {getInitials(s.fullName)}
-                          </div>
+                          <MemberAvatar user={s} size="lg" />
                           <div>
                             <h3 className="text-sm font-bold text-neutral-950">
                               {s.fullName}
@@ -897,11 +936,7 @@ export default function LivePage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${style.bg} ${style.text}`}
-                          >
-                            {getInitials(m.fullName)}
-                          </div>
+                          <MemberAvatar user={m} size="lg" />
                           <div>
                             <h3 className="text-sm font-bold text-neutral-950">
                               {m.fullName}
@@ -1012,9 +1047,7 @@ export default function LivePage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-purple-100 text-purple-700">
-                          {getInitials(t.fullName)}
-                        </div>
+                        <MemberAvatar user={t} size="lg" />
                         <div>
                           <h3 className="text-sm font-bold text-neutral-950">
                             {t.fullName}
@@ -1120,9 +1153,7 @@ export default function LivePage() {
                         className="flex items-center justify-between p-2 rounded-lg bg-neutral-50 border border-neutral-100"
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-full bg-neutral-200 text-neutral-700 flex items-center justify-center text-[10px] font-bold">
-                            {getInitials(m.fullName)}
-                          </span>
+                          <MemberAvatar user={m} size="sm" />
                           <div>
                             <span className="font-semibold text-neutral-900 block">
                               {m.fullName}
@@ -1160,7 +1191,6 @@ export default function LivePage() {
                       const isPresent = attendance.some(
                         (a) => a.studentId === s.id && a.status === 'present'
                       );
-                      const style = getAvatarStyle(s.fullName, false);
 
                       return (
                         <div
@@ -1168,11 +1198,7 @@ export default function LivePage() {
                           className="flex items-center justify-between p-2 rounded-lg bg-neutral-50 border border-neutral-100"
                         >
                           <div className="flex items-center gap-2.5">
-                            <span
-                              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${style.bg} ${style.text}`}
-                            >
-                              {getInitials(s.fullName)}
-                            </span>
+                            <MemberAvatar user={s} size="sm" />
                             <div>
                               <span className="font-semibold text-neutral-900 block">
                                 {s.fullName}
@@ -1222,17 +1248,7 @@ export default function LivePage() {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div
-                  className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                    selectedMember.role === 'mentor'
-                      ? 'bg-neutral-200 text-neutral-800'
-                      : selectedMember.role === 'teacher'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-sky-100 text-sky-700'
-                  }`}
-                >
-                  {getInitials(selectedMember.fullName)}
-                </div>
+                <MemberAvatar user={selectedMember} size="lg" />
                 <div>
                   <h3 className="font-bold text-base text-neutral-950">
                     {selectedMember.fullName}

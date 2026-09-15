@@ -773,8 +773,12 @@ export default function AdminTeamsPage() {
                           className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-neutral-50 border border-neutral-100"
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 rounded-full bg-neutral-200 text-neutral-800 flex items-center justify-center font-bold text-[10px] shrink-0">
-                              {getInitials(m.fullName)}
+                            <div className="w-6 h-6 rounded-full bg-neutral-200 text-neutral-800 flex items-center justify-center font-bold text-[10px] shrink-0 overflow-hidden">
+                              {m.avatarUrl ? (
+                                <img src={m.avatarUrl} alt={m.fullName} className="w-full h-full object-cover" />
+                              ) : (
+                                getInitials(m.fullName)
+                              )}
                             </div>
                             <div className="min-w-0">
                               <span className="font-semibold text-neutral-900 block truncate">
@@ -827,8 +831,12 @@ export default function AdminTeamsPage() {
                             className="flex items-center justify-between text-xs py-1 px-1.5 rounded-md hover:bg-neutral-50 transition-colors"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-5 h-5 rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold text-[9px] shrink-0">
-                                {getInitials(s.fullName)}
+                              <div className="w-5 h-5 rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold text-[9px] shrink-0 overflow-hidden">
+                                {s.avatarUrl ? (
+                                  <img src={s.avatarUrl} alt={s.fullName} className="w-full h-full object-cover" />
+                                ) : (
+                                  getInitials(s.fullName)
+                                )}
                               </div>
                               <div className="min-w-0">
                                 <span className="font-medium text-neutral-800 truncate block">
@@ -1192,8 +1200,12 @@ export default function AdminTeamsPage() {
                         className="flex items-center justify-between p-2.5 rounded-lg border border-neutral-200 bg-white"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                            {getInitials(m.fullName)}
+                          <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                            {m.avatarUrl ? (
+                              <img src={m.avatarUrl} alt={m.fullName} className="w-full h-full object-cover" />
+                            ) : (
+                              getInitials(m.fullName)
+                            )}
                           </div>
                           <div className="min-w-0">
                             <span className="font-semibold text-xs text-neutral-900 block truncate">
@@ -1296,8 +1308,12 @@ export default function AdminTeamsPage() {
                           className="flex items-center justify-between p-2 rounded-lg border border-neutral-200 bg-white"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-7 h-7 rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold text-[10px] shrink-0">
-                              {getInitials(s.fullName)}
+                            <div className="w-7 h-7 rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold text-[10px] shrink-0 overflow-hidden">
+                              {s.avatarUrl ? (
+                                <img src={s.avatarUrl} alt={s.fullName} className="w-full h-full object-cover" />
+                              ) : (
+                                getInitials(s.fullName)
+                              )}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">

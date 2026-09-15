@@ -163,8 +163,12 @@ export default function StudentHomePage() {
       {/* Student Identity Bar */}
       <div className="flex items-center justify-between p-3.5 bg-neutral-950 text-white rounded-2xl shadow-sm">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-sm text-white shrink-0">
-            {user?.fullName?.charAt(0) || 'S'}
+          <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-sm text-white shrink-0 overflow-hidden">
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.fullName || 'Student'} className="w-full h-full object-cover" />
+            ) : (
+              user?.fullName?.charAt(0) || 'S'
+            )}
           </div>
           <div className="min-w-0">
             <h1 className="font-bold text-sm tracking-tight text-white truncate">

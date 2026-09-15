@@ -311,8 +311,12 @@ export default function AdminChannelPermissionsPage() {
                 >
                   {/* Student Identity */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                      {student.fullName?.charAt(0).toUpperCase() || 'S'}
+                    <div className="w-9 h-9 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs overflow-hidden">
+                      {student.avatarUrl ? (
+                        <img src={student.avatarUrl} alt={student.fullName} className="w-full h-full object-cover" />
+                      ) : (
+                        student.fullName?.charAt(0).toUpperCase() || 'S'
+                      )}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">

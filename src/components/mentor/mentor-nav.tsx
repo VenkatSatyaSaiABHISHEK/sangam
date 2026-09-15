@@ -117,13 +117,26 @@ export function MentorNav() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <span className="text-xs font-semibold text-neutral-900 block leading-tight">
-              {user?.fullName || 'Mentor'}
-            </span>
-            <span className="text-[10px] text-neutral-400 font-mono block">
-              ADVISOR
-            </span>
+          <div className="flex items-center gap-2">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.fullName || 'Mentor'}
+                className="w-8 h-8 rounded-full object-cover border border-neutral-200 shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                {user?.fullName?.charAt(0) || 'M'}
+              </div>
+            )}
+            <div className="text-right hidden sm:block">
+              <span className="text-xs font-semibold text-neutral-900 block leading-tight">
+                {user?.fullName || 'Mentor'}
+              </span>
+              <span className="text-[10px] text-neutral-400 font-mono block">
+                ADVISOR
+              </span>
+            </div>
           </div>
 
           <button

@@ -186,8 +186,12 @@ export default function AdminTeachersPage() {
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                      {teacher.fullName.charAt(0)}
+                    <div className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden">
+                      {teacher.avatarUrl ? (
+                        <img src={teacher.avatarUrl} alt={teacher.fullName} className="w-full h-full object-cover" />
+                      ) : (
+                        teacher.fullName.charAt(0)
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-bold text-sm text-neutral-950 truncate">

@@ -55,10 +55,18 @@ export default function StudentDashboardPage() {
       {/* Student Profile Card (Section 13) */}
       <Card className="p-4 bg-neutral-950 text-white border-neutral-900 shadow-md space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-sm text-white shrink-0">
-              {user?.fullName?.charAt(0) || 'S'}
-            </div>
+          <div className="flex items-center gap-3">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.fullName || 'Student'}
+                className="w-10 h-10 rounded-full object-cover border border-neutral-700 shrink-0 shadow-xs"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-sm text-white shrink-0">
+                {user?.fullName?.charAt(0) || 'S'}
+              </div>
+            )}
             <div>
               <h2 className="font-bold text-sm tracking-tight text-white">
                 {user?.fullName || 'Student Participant'}

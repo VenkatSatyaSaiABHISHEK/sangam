@@ -22,9 +22,17 @@ export default function StudentProfilePage() {
       </div>
 
       <Card className="p-6 text-center space-y-4 border-neutral-200">
-        <div className="w-16 h-16 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xl mx-auto">
-          {user?.fullName?.charAt(0) || 'S'}
-        </div>
+        {user?.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt={user.fullName || 'Student'}
+            className="w-20 h-20 rounded-full object-cover border-2 border-neutral-200 shadow-sm mx-auto"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold text-xl mx-auto shadow-sm">
+            {user?.fullName?.charAt(0) || 'S'}
+          </div>
+        )}
 
         <div>
           <h2 className="text-base font-bold text-neutral-950">

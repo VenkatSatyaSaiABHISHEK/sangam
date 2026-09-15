@@ -59,9 +59,28 @@ export async function GET(req: NextRequest) {
         allTeachers.forEach((t) => tMap.set(t.id, t));
 
         fsUsers.forEach((u) => {
-          if (u.role === 'student') sMap.set(u.id, { ...sMap.get(u.id), ...u });
-          else if (u.role === 'mentor') mMap.set(u.id, { ...mMap.get(u.id), ...u });
-          else if (u.role === 'teacher') tMap.set(u.id, { ...tMap.get(u.id), ...u });
+          if (u.role === 'student') {
+            const existing = sMap.get(u.id);
+            const merged = { ...existing, ...u };
+            if (existing?.avatarUrl && !merged.avatarUrl) {
+              merged.avatarUrl = existing.avatarUrl;
+            }
+            sMap.set(u.id, merged);
+          } else if (u.role === 'mentor') {
+            const existing = mMap.get(u.id);
+            const merged = { ...existing, ...u };
+            if (existing?.avatarUrl && !merged.avatarUrl) {
+              merged.avatarUrl = existing.avatarUrl;
+            }
+            mMap.set(u.id, merged);
+          } else if (u.role === 'teacher') {
+            const existing = tMap.get(u.id);
+            const merged = { ...existing, ...u };
+            if (existing?.avatarUrl && !merged.avatarUrl) {
+              merged.avatarUrl = existing.avatarUrl;
+            }
+            tMap.set(u.id, merged);
+          }
         });
 
         allStudents = Array.from(sMap.values());
